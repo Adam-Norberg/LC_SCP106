@@ -4,15 +4,15 @@ using BepInEx;
 using LethalLib.Modules;
 using BepInEx.Logging;
 using System.IO;
-using ExampleEnemy.Configuration;
+using SCP106.Configuration;
 
-namespace ExampleEnemy {
+namespace SCP106 {
     [BepInPlugin(ModGUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInDependency(LethalLib.Plugin.ModGUID)] 
     public class Plugin : BaseUnityPlugin {
         // It is a good idea for our GUID to be more unique than only the plugin name. Notice that it is used in the BepInPlugin attribute.
         // The GUID is also used for the config file name by default.
-        public const string ModGUID = "hamunii." + PluginInfo.PLUGIN_NAME;
+        public const string ModGUID = "Dackie." + PluginInfo.PLUGIN_NAME;
         internal static new ManualLogSource Logger;
         internal static PluginConfig BoundConfig { get; private set; } = null;
         public static AssetBundle ModAssets;

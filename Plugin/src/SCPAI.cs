@@ -1,17 +1,17 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Diagnostics;
 using GameNetcodeStuff;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace ExampleEnemy {
+namespace SCP106 {
 
     // You may be wondering, how does the Example Enemy know it is from class ExampleEnemyAI?
     // Well, we give it a reference to to this class in the Unity project where we make the asset bundle.
     // Asset bundles cannot contain scripts, so our script lives here. It is important to get the
     // reference right, or else it will not find this file. See the guide for more information.
 
-    class ExampleEnemyAI : EnemyAI
+    class SCPAI : EnemyAI
     {
         // We set these in our Asset Bundle, so we can disable warning CS0649:
         // Field 'field' is never assigned to, and will always have its default value 'value'
