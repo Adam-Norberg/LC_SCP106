@@ -10,8 +10,8 @@ namespace SCP106.Configuration {
         public ConfigEntry<int> SpawnWeight;
         public PluginConfig(BaseUnityPlugin plugin)
         {
-            SpawnWeight = plugin.Config.Bind("ExampleEnemy", "Spawn weight", 20,
-                "The spawn chance weight for ExampleEnemy, relative to other existing enemies.\n" +
+            SpawnWeight = plugin.Config.Bind("SCP106", "Spawn weight", 20,
+                "The spawn chance weight for SCP-106, relative to other existing enemies.\n" +
                 "Goes up from 0, lower is more rare, 100 and up is very common.");
             
             ClearUnusedEntries(plugin);
