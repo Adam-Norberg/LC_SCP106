@@ -25,7 +25,7 @@ namespace SCP106 {
         Vector3 positionRandomness;
         Vector3 StalkPos;
         System.Random enemyRandom;
-        private AudioSource footstepSource;
+        public AudioSource footstepSource;
         public AudioClip[] footstepSounds;
         enum State {
             SEARCHING,
@@ -44,7 +44,6 @@ namespace SCP106 {
         public override void Start() {
             base.Start();
             LogIfDebugBuild("SCP-106 has Spawned");
-            footstepSource = GetComponent<AudioSource>();
             timeSinceHittingLocalPlayer = 0;
             creatureAnimator.SetTrigger("startWalk");
             timeSinceNewRandPos = 0;
@@ -62,11 +61,11 @@ namespace SCP106 {
         */
         public override void Update() {
             base.Update();
+            timeSinceHittingLocalPlayer += Time.deltaTime;
             timeSinceNewRandPos += Time.deltaTime;
             var state = currentBehaviourStateIndex;
             if (targetPlayer != null && (state == (int)State.HUNTING)){
-                turnCompass.LookAt(targetPlayer.gameplayCamera.transform.position);
-                transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(new Vector3(0f, turnCompass.eulerAngles.y, 0f)), 4f * Time.deltaTime);
+                
             }
         }
         /*
@@ -99,7 +98,7 @@ namespace SCP106 {
                         SwitchToBehaviourClientRpc((int)State.SEARCHING);
                         return;
                     }
-                    StickingInFrontOfPlayer();
+                    SetDestinationToPosition(targetPlayer.transform.position, checkForPath: false);
                     break;
                 default:
                     LogIfDebugBuild("Went to inexistent state!");
@@ -109,8 +108,8 @@ namespace SCP106 {
 
         // Called everytime SCP-106 lands a foot on the ground (Unity Animation Event)
         public void PlayFootstepSound(){
-            AudioClip step = footstepSounds[Random.Range(0,footstepSounds.Length)];
-            footstepSource.PlayOneShot(step);
+            //AudioClip step = footstepSounds[Random.Range(0,footstepSounds.Length)];
+            //footstepSource.PlayOneShot(step);
         }
 
         /*
@@ -180,7 +179,7 @@ namespace SCP106 {
             PlayerControllerB playerControllerB = MeetsStandardPlayerCollisionConditions(other);
             if (playerControllerB != null)
             {
-                LogIfDebugBuild("Example Enemy Collision with Player!");
+                LogIfDebugBuild("SCP-106 Collision with Player!");
                 timeSinceHittingLocalPlayer = 0f;
                 playerControllerB.DamagePlayer(20);
             }
