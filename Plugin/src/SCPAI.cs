@@ -3,6 +3,7 @@ using System.Diagnostics;
 using GameNetcodeStuff;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace SCP106 {
 
@@ -61,6 +62,12 @@ namespace SCP106 {
         */
         public override void Update() {
             base.Update();
+            timeSinceNewRandPos += Time.deltaTime;
+            var state = currentBehaviourStateIndex;
+            if (targetPlayer != null && (state == (int)State.HUNTING)){
+                turnCompass.LookAt(targetPlayer.gameplayCamera.transform.position);
+                transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(new Vector3(0f, turnCompass.eulerAngles.y, 0f)), 4f * Time.deltaTime);
+            }
         }
         /*
             DoAIInterval runs every X seconds as defined in Unity (not every frame, allows heavier calculations)
