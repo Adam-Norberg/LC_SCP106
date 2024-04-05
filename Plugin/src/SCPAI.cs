@@ -21,12 +21,6 @@ namespace SCP106 {
         public Transform attackArea;
         #pragma warning restore 0649
         float timeSinceHittingLocalPlayer;
-        float timeSinceNewRandPos;
-        Vector3 positionRandomness;
-        Vector3 StalkPos;
-        System.Random enemyRandom;
-        public AudioSource footstepSource;
-        public AudioClip[] footstepSounds;
         enum State {
             SEARCHING,
             SPOTTED,
@@ -46,9 +40,6 @@ namespace SCP106 {
             LogIfDebugBuild("SCP-106 has Spawned");
             timeSinceHittingLocalPlayer = 0;
             creatureAnimator.SetTrigger("startWalk");
-            timeSinceNewRandPos = 0;
-            positionRandomness = new Vector3(0, 0, 0);
-            enemyRandom = new System.Random(StartOfRound.Instance.randomMapSeed + thisEnemyIndex);
             // NOTE: Add your behavior states in your enemy script in Unity, where you can configure fun stuff
             // like a voice clip or an sfx clip to play when changing to that specific behavior state.
             currentBehaviourStateIndex = (int)State.SEARCHING;
@@ -62,7 +53,6 @@ namespace SCP106 {
         public override void Update() {
             base.Update();
             timeSinceHittingLocalPlayer += Time.deltaTime;
-            timeSinceNewRandPos += Time.deltaTime;
             var state = currentBehaviourStateIndex;
             if (targetPlayer != null && (state == (int)State.HUNTING)){
                 
@@ -106,6 +96,25 @@ namespace SCP106 {
             }
         }
 
+        /*
+            FROM STATE, TO STATE = (SEARCHING,HUNTING)
+            If player sees SCP-106 while SCP-106 is Searching, SCP starts hunting them.
+        */
+        private void HuntSpottedPlayer() {
+            PlayerControllerB closestPlayerInSight = GetClosestPlayer(requireLineOfSight: true, cannotBeInShip: true, cannotBeNearShip: true);
+            bool inSights = PlayerLookingAtMe(closestPlayerInSight);
+            LogIfDebugBuild($"Player is in sights: {inSights}");
+            //SetMovingTowardsTargetPlayer()
+        }
+
+        private bool PlayerLookingAtMe(PlayerControllerB player) {
+            Vector3 myPosition = transform.position;
+            float fovWidth = 45f;
+            float proximityAwareness = -1;
+            int viewRange = 60;
+            return player.HasLineOfSightToPosition(myPosition,fovWidth,viewRange,proximityAwareness);
+        }
+
         // Called everytime SCP-106 lands a foot on the ground (Unity Animation Event)
         public void PlayFootstepSound(){
             //AudioClip step = footstepSounds[Random.Range(0,footstepSounds.Length)];
@@ -145,28 +154,10 @@ namespace SCP106 {
         }
 
         /*
-            Checks if we are close enough to attack a player
+            Sets the TargetPlayer to the player who is furthest away from the other players.
         */
-        void StickingInFrontOfPlayer() {
-            // We only run this method for the host because I'm paranoid about randomness not syncing I guess
-            // This is fine because the game does sync the position of the enemy.
-            // Also the attack is a ClientRpc so it should always sync
-            if (targetPlayer == null || !IsOwner) {
-                return;
-            }
-            if(timeSinceNewRandPos > 0.7f){
-                timeSinceNewRandPos = 0;
-                if(enemyRandom.Next(0, 5) == 0){
-                    // Attack
-                    //StartCoroutine(SwingAttack());
-                }
-                else{
-                    // Go in front of player
-                    positionRandomness = new Vector3(enemyRandom.Next(-2, 2), 0, enemyRandom.Next(-2, 2));
-                    StalkPos = targetPlayer.transform.position - Vector3.Scale(new Vector3(-5, 0, -5), targetPlayer.transform.forward) + positionRandomness;
-                }
-                SetDestinationToPosition(StalkPos, checkForPath: false);
-            }
+        private void HuntLoneliestPlayer() {
+            // PlayerControllerB "isPlayerAlone" bool
         }
 
         /*
