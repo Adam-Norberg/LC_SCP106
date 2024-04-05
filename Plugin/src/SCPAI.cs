@@ -67,17 +67,17 @@ namespace SCP106 {
                 case (int)State.SEARCHING:
                     agent.speed = 3f;
                     // Check if we are within the field of view for the player. If so, hunt them
-                    if (FoundClosestPlayerInRange(25f,3f)){
+                    /*if (FoundClosestPlayerInRange(25f,3f)){
                         LogIfDebugBuild("Start Target Player");
                         StopSearch(currentSearch);
                         SwitchToBehaviourClientRpc((int)State.HUNTING);
-                    }
+                    }*/
                     break;
                 case (int)State.SPOTTED:
                     agent.speed = 0f;
                     break;
                 case (int)State.HUNTING:
-                    agent.speed = 5f;
+                    /*agent.speed = 5f;
                     float distanceBetweenPlayer = Vector3.Distance(transform.position, targetPlayer.transform.position);
                     float maxDistanceToHunt = 20f;
                     bool playerInSight = HasLineOfSightToPosition(targetPlayer.transform.position);
@@ -88,7 +88,7 @@ namespace SCP106 {
                         SwitchToBehaviourClientRpc((int)State.SEARCHING);
                         return;
                     }
-                    SetDestinationToPosition(targetPlayer.transform.position, checkForPath: false);
+                    SetDestinationToPosition(targetPlayer.transform.position, checkForPath: false);*/
                     break;
                 default:
                     LogIfDebugBuild("Went to inexistent state!");
