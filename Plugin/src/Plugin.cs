@@ -38,14 +38,14 @@ namespace SCP106 {
             }
 
             // We load our assets from our asset bundle. Remember to rename them both here and in our Unity project.
-            var ExampleEnemy = ModAssets.LoadAsset<EnemyType>("ExampleEnemy");
-            var ExampleEnemyTN = ModAssets.LoadAsset<TerminalNode>("ExampleEnemyTN");
-            var ExampleEnemyTK = ModAssets.LoadAsset<TerminalKeyword>("ExampleEnemyTK");
+            var SCP106 = ModAssets.LoadAsset<EnemyType>("SCP106");
+            var SCP106TN = ModAssets.LoadAsset<TerminalNode>("SCP106TN");
+            var SCP106TK = ModAssets.LoadAsset<TerminalKeyword>("SCP106TK");
             
             // Network Prefabs need to be registered. See https://docs-multiplayer.unity3d.com/netcode/current/basics/object-spawning/
             // LethalLib registers prefabs on GameNetworkManager.Start.
-            NetworkPrefabs.RegisterNetworkPrefab(ExampleEnemy.enemyPrefab);
-			Enemies.RegisterEnemy(ExampleEnemy, BoundConfig.SpawnWeight.Value, Levels.LevelTypes.All, Enemies.SpawnType.Default, ExampleEnemyTN, ExampleEnemyTK);
+            NetworkPrefabs.RegisterNetworkPrefab(SCP106.enemyPrefab);
+			Enemies.RegisterEnemy(SCP106, BoundConfig.SpawnWeight.Value, Levels.LevelTypes.All, Enemies.SpawnType.Default, SCP106TN, SCP106TK);
             
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }

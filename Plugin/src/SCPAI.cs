@@ -24,11 +24,12 @@ namespace SCP106 {
         Vector3 positionRandomness;
         Vector3 StalkPos;
         System.Random enemyRandom;
-        bool isDeadAnimationDone;
+        private AudioSource footstepSource;
+        public AudioClip[] footstepSounds;
         enum State {
-            SearchingForPlayer,
-            StickingInFrontOfPlayer,
-            HeadSwingAttackInProgress,
+            SEARCHING,
+            SPOTTED,
+            HUNTING,
         }
 
         [Conditional("DEBUG")]
@@ -36,86 +37,78 @@ namespace SCP106 {
             Plugin.Logger.LogInfo(text);
         }
 
+        /*
+            Start is called when the enemy is spawned in.
+        */
         public override void Start() {
             base.Start();
-            LogIfDebugBuild("Example Enemy Spawned");
+            LogIfDebugBuild("SCP-106 has Spawned");
+            footstepSource = GetComponent<AudioSource>();
             timeSinceHittingLocalPlayer = 0;
             creatureAnimator.SetTrigger("startWalk");
             timeSinceNewRandPos = 0;
             positionRandomness = new Vector3(0, 0, 0);
             enemyRandom = new System.Random(StartOfRound.Instance.randomMapSeed + thisEnemyIndex);
-            isDeadAnimationDone = false;
             // NOTE: Add your behavior states in your enemy script in Unity, where you can configure fun stuff
             // like a voice clip or an sfx clip to play when changing to that specific behavior state.
-            currentBehaviourStateIndex = (int)State.SearchingForPlayer;
+            currentBehaviourStateIndex = (int)State.SEARCHING;
             // We make the enemy start searching. This will make it start wandering around.
             StartSearch(transform.position);
         }
 
+        /*
+            Update is called every frame (light calculations only)
+        */
         public override void Update() {
             base.Update();
-            if(isEnemyDead){
-                // For some weird reason I can't get an RPC to get called from HitEnemy() (works from other methods), so we do this workaround. We just want the enemy to stop playing the song.
-                if(!isDeadAnimationDone){ 
-                    LogIfDebugBuild("Stopping enemy voice with janky code.");
-                    isDeadAnimationDone = true;
-                    creatureVoice.Stop();
-                    creatureVoice.PlayOneShot(dieSFX);
-                }
-                return;
-            }
-            timeSinceHittingLocalPlayer += Time.deltaTime;
-            timeSinceNewRandPos += Time.deltaTime;
-            var state = currentBehaviourStateIndex;
-            if(targetPlayer != null && (state == (int)State.StickingInFrontOfPlayer || state == (int)State.HeadSwingAttackInProgress)){
-                turnCompass.LookAt(targetPlayer.gameplayCamera.transform.position);
-                transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(new Vector3(0f, turnCompass.eulerAngles.y, 0f)), 4f * Time.deltaTime);
-            }
-            if (stunNormalizedTimer > 0f)
-            {
-                agent.speed = 0f;
-            }
         }
-
+        /*
+            DoAIInterval runs every X seconds as defined in Unity (not every frame, allows heavier calculations)
+        */
         public override void DoAIInterval() {
-            
             base.DoAIInterval();
-            if (isEnemyDead || StartOfRound.Instance.allPlayersDead) {
-                return;
-            };
-
-            switch(currentBehaviourStateIndex) {
-                case (int)State.SearchingForPlayer:
+            switch(currentBehaviourStateIndex){
+                case (int)State.SEARCHING:
                     agent.speed = 3f;
-                    if (FoundClosestPlayerInRange(25f, 3f)){
+                    // Check if we are within the field of view for the player. If so, hunt them
+                    if (FoundClosestPlayerInRange(25f,3f)){
                         LogIfDebugBuild("Start Target Player");
                         StopSearch(currentSearch);
-                        SwitchToBehaviourClientRpc((int)State.StickingInFrontOfPlayer);
+                        SwitchToBehaviourClientRpc((int)State.HUNTING);
                     }
                     break;
-
-                case (int)State.StickingInFrontOfPlayer:
+                case (int)State.SPOTTED:
+                    agent.speed = 0f;
+                    break;
+                case (int)State.HUNTING:
                     agent.speed = 5f;
-                    // Keep targetting closest player, unless they are over 20 units away and we can't see them.
-                    if (!TargetClosestPlayerInAnyCase() || (Vector3.Distance(transform.position, targetPlayer.transform.position) > 20 && !HasLineOfSightToPosition(targetPlayer.transform.position))){
+                    float distanceBetweenPlayer = Vector3.Distance(transform.position, targetPlayer.transform.position);
+                    float maxDistanceToHunt = 20f;
+                    bool playerInSight = HasLineOfSightToPosition(targetPlayer.transform.position);
+                    // If player moves too far away - or out of sight - stop hunting.
+                    if(!TargetClosestPlayerInAnyCase() || (distanceBetweenPlayer > maxDistanceToHunt && !playerInSight)){
                         LogIfDebugBuild("Stop Target Player");
                         StartSearch(transform.position);
-                        SwitchToBehaviourClientRpc((int)State.SearchingForPlayer);
+                        SwitchToBehaviourClientRpc((int)State.SEARCHING);
                         return;
                     }
                     StickingInFrontOfPlayer();
                     break;
-
-                case (int)State.HeadSwingAttackInProgress:
-                    // We don't care about doing anything here
-                    break;
-                    
                 default:
-                    LogIfDebugBuild("This Behavior State doesn't exist!");
+                    LogIfDebugBuild("Went to inexistent state!");
                     break;
             }
         }
 
+        // Called everytime SCP-106 lands a foot on the ground (Unity Animation Event)
+        public void PlayFootstepSound(){
+            AudioClip step = footstepSounds[Random.Range(0,footstepSounds.Length)];
+            footstepSource.PlayOneShot(step);
+        }
+
+        /*
+            Returns whether or not a player is in view of SCP-106.
+        */
         bool FoundClosestPlayerInRange(float range, float senseRange) {
             TargetClosestPlayer(bufferDistance: 1.5f, requireLineOfSight: true);
             if(targetPlayer == null){
@@ -126,6 +119,9 @@ namespace SCP106 {
             return targetPlayer != null && Vector3.Distance(transform.position, targetPlayer.transform.position) < range;
         }
         
+        /*  
+            Returns true if a player is close / near to SCP-106, regardless of being in sights.
+        */
         bool TargetClosestPlayerInAnyCase() {
             mostOptimalDistance = 2000f;
             targetPlayer = null;
@@ -142,6 +138,9 @@ namespace SCP106 {
             return true;
         }
 
+        /*
+            Checks if we are close enough to attack a player
+        */
         void StickingInFrontOfPlayer() {
             // We only run this method for the host because I'm paranoid about randomness not syncing I guess
             // This is fine because the game does sync the position of the enemy.
@@ -153,7 +152,7 @@ namespace SCP106 {
                 timeSinceNewRandPos = 0;
                 if(enemyRandom.Next(0, 5) == 0){
                     // Attack
-                    StartCoroutine(SwingAttack());
+                    //StartCoroutine(SwingAttack());
                 }
                 else{
                     // Go in front of player
@@ -164,24 +163,9 @@ namespace SCP106 {
             }
         }
 
-        IEnumerator SwingAttack() {
-            SwitchToBehaviourClientRpc((int)State.HeadSwingAttackInProgress);
-            StalkPos = targetPlayer.transform.position;
-            SetDestinationToPosition(StalkPos);
-            yield return new WaitForSeconds(0.5f);
-            if(isEnemyDead){
-                yield break;
-            }
-            DoAnimationClientRpc("swingAttack");
-            yield return new WaitForSeconds(0.35f);
-            SwingAttackHitClientRpc();
-            // In case the player has already gone away, we just yield break (basically same as return, but for IEnumerator)
-            if(currentBehaviourStateIndex != (int)State.HeadSwingAttackInProgress){
-                yield break;
-            }
-            SwitchToBehaviourClientRpc((int)State.StickingInFrontOfPlayer);
-        }
-
+        /*
+            Called when SCP-106 touches / collides with an object (e.g. Player)
+        */
         public override void OnCollideWithPlayer(Collider other) {
             if (timeSinceHittingLocalPlayer < 1f) {
                 return;
@@ -195,6 +179,9 @@ namespace SCP106 {
             }
         }
 
+        /*
+            Called when a Player hits / attacks SCP-106
+        */
         public override void HitEnemy(int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false) {
             base.HitEnemy(force, playerWhoHit, playHitSFX);
             if(isEnemyDead){
@@ -207,7 +194,7 @@ namespace SCP106 {
                     // KillEnemy() will also attempt to call creatureAnimator.SetTrigger("KillEnemy"),
                     // so we don't need to call a death animation ourselves.
 
-                    StopCoroutine(SwingAttack());
+                    //StopCoroutine(SwingAttack());
                     // We need to stop our search coroutine, because the game does not do that by default.
                     StopCoroutine(searchCoroutine);
                     KillEnemyOnOwnerClient();

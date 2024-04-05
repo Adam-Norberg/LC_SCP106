@@ -1,0 +1,93 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 65d3fcb39dd67306e9bb17a603308070, type: 3}
+  m_Name: SCP106
+  m_EditorClassIdentifier: 
+  enemyName: SCP-106
+  probabilityCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spawningDisabled: 0
+  numberSpawnedFalloff:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: -0.95393926
+      outSlope: -0.95393926
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1.1916809
+      value: -0.13679123
+      inSlope: -0.95393926
+      outSlope: -0.95393926
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  useNumberSpawnedFalloff: 0
+  enemyPrefab: {fileID: 1495979921061981564, guid: 113b55c727d0c7d4c806cccd711bbfca,
+    type: 3}
+  PowerLevel: 1
+  MaxCount: 1
+  numberSpawned: 0
+  isOutsideEnemy: 0
+  isDaytimeEnemy: 0
+  normalizedTimeInDayToLeave: 0.5
+  stunTimeMultiplier: 3
+  doorSpeedMultiplier: 0.25
+  stunGameDifficultyMultiplier: 1
+  canBeStunned: 1
+  canDie: 0
+  destroyOnDeath: 0
+  canSeeThroughFog: 1
+  timeToPlayAudio: 0
+  loudnessMultiplier: 0
+  overrideVentSFX: {fileID: 8300000, guid: 7c7e9d01b9a45c144be7d67c807a01e7, type: 3}
+  hitBodySFX: {fileID: 8300000, guid: a68cd71122992794caa22125796c8696, type: 3}
+  hitEnemyVoiceSFX: {fileID: 8300000, guid: eba35433ecf2d034db71d3baeab31782, type: 3}
+  deathSFX: {fileID: 0}
+  stunSFX: {fileID: 0}
+  miscAnimations: []
+  audioClips:
+  - {fileID: 8300000, guid: 702e32299faf7aa43b9581ef1e518cde, type: 3}
+  - {fileID: 8300000, guid: 016d6d5907180454db4e0f3ae827c6dc, type: 3}
+  - {fileID: 8300000, guid: 8cdc3ce608b18164197179cbe364f34e, type: 3}
+  - {fileID: 8300000, guid: ee7ff29cd99117d42807ded7731771ac, type: 3}
