@@ -12,14 +12,14 @@
     - From front: Grabs and spews corrosion onto the player's face
 
 ### Models:
-- Better turning
+- Better turning*
 - Smoother walking
 - Match speed with animation & vice-versa (so he doesn't "glide")
 
 ### Sounds:
 - Add footsteps for SCP-106
 - Cooldown on Breathing SFX (is currently like darth vader)
-- "Hunt" music when going from Searching to Hunting
+- "Hunt" music when going from Spotted to Hunting (Music should be louder)
 
 ## Credits
 
