@@ -33,7 +33,7 @@ namespace SCP106 {
         float timeSinceSpottedLocalPlayer = 60;
         readonly float spottedSFXCooldown = 60; // Cooldown in Seconds between doing the surprised "Spotted" sequence
         float chaseMusicLimit = 60; // Play chase music for 60 seconds, then check if we can turn it off (only if no one nearby)
-        private float timeSinceHuntStart;
+        private float timeSinceHuntStart = 0;
         enum State {
             IDLE,
             SEARCHING,
@@ -55,7 +55,7 @@ namespace SCP106 {
         */
         public override void Start() {
             base.Start();
-            LogIfDebugBuild("SCP-106 has Spawned");
+            LogIfDebugBuild("[SCP-106] SCP-106 has Spawned");
 
             timeSinceHittingLocalPlayer = 0;
             creatureAnimator.SetTrigger("startWalk");
@@ -73,6 +73,7 @@ namespace SCP106 {
             base.Update();
             timeSinceHittingLocalPlayer += Time.deltaTime;
             timeSinceSpottedLocalPlayer += Time.deltaTime;
+            timeSinceHuntStart += Time.deltaTime;
             var state = currentBehaviourStateIndex;
             if (targetPlayer != null && (state == (int)State.HUNTING)){
                 
@@ -100,7 +101,7 @@ namespace SCP106 {
                     lookAtPlayer = false;
                     break;
                 default:
-                    LogIfDebugBuild("Unmatched HeadState case!");
+                    LogIfDebugBuild("[SCP-106] Unmatched HeadState case!");
                     break;
             }
         }
@@ -130,7 +131,7 @@ namespace SCP106 {
                     bool playerInSight = HasLineOfSightToPosition(targetPlayer.transform.position);
                     // If player moves too far away - or out of sight - stop hunting.
                     if(!TargetClosestPlayerInAnyCase() || (distanceBetweenPlayer > maxDistanceToHunt && !playerInSight)){
-                        LogIfDebugBuild("Stop Target Player");
+                        LogIfDebugBuild("[SCP-106] Stop Target Player, going to Searching State");
                         targetPlayer = null;
                         StartSearch(transform.position);
                         SwitchToBehaviourClientRpc((int)State.SEARCHING);
@@ -140,7 +141,7 @@ namespace SCP106 {
                     SetDestinationToPosition(targetPlayer.transform.position, checkForPath: false);
                     break;
                 default:
-                    LogIfDebugBuild("Went to inexistent state!");
+                    LogIfDebugBuild("[SCP-106] Went to inexistent state!");
                     break;
             }
         }
@@ -150,8 +151,10 @@ namespace SCP106 {
             If Searching with Chase music on, with play timer reached, turn it off if no one is close enough to hear.
         */
         private void StopChaseMusicIfNoOneNearbyAndLimitReached() {
-            float currentTime = Time.time;
-            if (currentTime - timeSinceHuntStart < chaseMusicLimit) {
+            if (chaseSource.isPlaying){
+                return;
+            }
+            if (timeSinceHuntStart < chaseMusicLimit) {
                 return;
             }
             bool isCloseEnoughToHear = FoundClosestPlayerInRange(30f,30f);
@@ -192,10 +195,10 @@ namespace SCP106 {
         private void ToStateSpotted() {
             // States
             if (currentBehaviourStateIndex == (int)State.SPOTTED){
-                LogIfDebugBuild("ToStateSpotted called while already in Spotted State!");
+                LogIfDebugBuild("[SCP-106] ToStateSpotted called while already in Spotted State!");
                 return;
             }
-            LogIfDebugBuild("SCP-106 has been Spotted!");
+            LogIfDebugBuild("[SCP-106] SCP-106 has been Spotted!");
             timeSinceSpottedLocalPlayer = 0;
             SwitchToBehaviourClientRpc((int)State.SPOTTED);
             creatureAnimator.SetTrigger("startSpotted");
@@ -216,9 +219,9 @@ namespace SCP106 {
         */
         public void ToStateHunting() {
             // States
-            LogIfDebugBuild("SCP-106 is hunting!");
+            LogIfDebugBuild("[SCP-106] SCP-106 is hunting!");
             SwitchToBehaviourClientRpc((int)State.HUNTING);
-            timeSinceHuntStart = Time.time;
+            timeSinceHuntStart = 0;
             creatureAnimator.SetTrigger("startWalk");
             // SFX
             if (!chaseSource.isPlaying) {
@@ -292,7 +295,7 @@ namespace SCP106 {
             PlayerControllerB playerControllerB = MeetsStandardPlayerCollisionConditions(other);
             if (playerControllerB != null)
             {
-                LogIfDebugBuild("SCP-106 Collision with Player!");
+                LogIfDebugBuild("[SCP-106] SCP-106 Collision with Player!");
                 timeSinceHittingLocalPlayer = 0f;
                 playerControllerB.DamagePlayer(20);
             }
