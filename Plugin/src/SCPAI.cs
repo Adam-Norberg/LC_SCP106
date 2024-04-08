@@ -8,11 +8,6 @@ using UnityEngine.UIElements;
 
 namespace SCP106 {
 
-    // You may be wondering, how does the Example Enemy know it is from class ExampleEnemyAI?
-    // Well, we give it a reference to to this class in the Unity project where we make the asset bundle.
-    // Asset bundles cannot contain scripts, so our script lives here. It is important to get the
-    // reference right, or else it will not find this file. See the guide for more information.
-
     class SCPAI : EnemyAI
     {
         // We set these in our Asset Bundle, so we can disable warning CS0649:
@@ -21,28 +16,48 @@ namespace SCP106 {
         public Transform boneHead; // Head object reference of the model
         public Transform boneNeck; // Neck object reference
         public Transform turnReference; // Invisible object pointing towards player, as reference to smoothly track head & neck
-        public AudioSource chaseSource;
-        public AudioClip[] footstepSounds;
-        public AudioClip[] spottedSounds;
-        public AudioClip[] neckSounds;
+
+        public AudioSource chaseSource; // Music
+        public AudioSource stepSource;  // Footstep SFX
+        // creatureSFX - Special SFX's (e.g. Spotted)
+        // creatureVoice - Breathing, Laughing
+
+        public AudioClip[] footstepSounds; // Footstep sounds
+        public AudioClip[] spottedSounds; // SFX when spotted by a player
+        public AudioClip[] neckSounds; // SFX for when turning head towards player, and when twisting player's neck
+
+        public ParticleSystem creatureVFX;
 
         public bool lookAtPlayer = false;
+        private bool KillingPlayer = false;
 
         #pragma warning restore 0649
         float timeSinceHittingLocalPlayer;
         float timeSinceSpottedLocalPlayer = 60;
         readonly float spottedSFXCooldown = 60; // Cooldown in Seconds between doing the surprised "Spotted" sequence
-        float chaseMusicLimit = 60; // Play chase music for 60 seconds, then check if we can turn it off (only if no one nearby)
+        readonly float chaseMusicLimit = 60; // Play chase music for 60 seconds, then check if we can turn it off (only if no one nearby)
         private float timeSinceHuntStart = 0;
-        enum State {
+        public enum State { // SCP Creature States
             IDLE,
             SEARCHING,
             SPOTTED,
             HUNTING,
+            KILLING,
+            EMERGING, // "Teleport" To a Player
         }
-        public enum HeadState {
+        public enum HeadState { // SCP Head State (Animation)
             StartLookingAtPlayer,
             FinishedLookingAtPlayer,
+        }
+        public enum SFX {
+            Spotted,
+            Neck,
+        }
+
+        public enum KillState { // SCP Kill States (Kill Animations / Kill Events, e.g. "Death by PukingAtPlayer")
+            StaringAtPlayer, // General Collision Kill
+            NeckSnap, // If SCP kills from behind
+            DragDownIntoCorrosion, // Pull player down into corrosion if collision during Emerging
         }
 
         [Conditional("DEBUG")]
@@ -55,15 +70,23 @@ namespace SCP106 {
         */
         public override void Start() {
             base.Start();
-            LogIfDebugBuild("[SCP-106] SCP-106 has Spawned");
+            LogIfDebugBuild("SCP-106 has Spawned");
 
-            timeSinceHittingLocalPlayer = 0;
-            creatureAnimator.SetTrigger("startWalk");
-            // NOTE: Add your behavior states in your enemy script in Unity, where you can configure fun stuff
-            // like a voice clip or an sfx clip to play when changing to that specific behavior state.
-            currentBehaviourStateIndex = (int)State.SEARCHING;
-            // We make the enemy start searching. This will make it start wandering around.
+            InitSCPValuesServerRpc();
             StartSearch(transform.position);
+            timeSinceHittingLocalPlayer = 0;
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void InitSCPValuesServerRpc() {
+            InitSCPValuesClientRpc();
+        }
+
+        [ClientRpc]
+        public void InitSCPValuesClientRpc() {
+            creatureAnimator.SetTrigger("startWalk");
+            creatureAnimator.speed = 2;
+            currentBehaviourStateIndex = (int)State.SEARCHING;
         }
 
         /*
@@ -89,21 +112,21 @@ namespace SCP106 {
             }
         }
 
-        /*
-            SPOTTED - Called by Unity Animation Event
-        */
-        public void LookAtPlayer(HeadState state) {
-            switch(state) {
-                case HeadState.StartLookingAtPlayer:
-                    lookAtPlayer = true;
-                    break;
-                case HeadState.FinishedLookingAtPlayer:
-                    lookAtPlayer = false;
-                    break;
-                default:
-                    LogIfDebugBuild("[SCP-106] Unmatched HeadState case!");
-                    break;
+        // Spotted 'turning head' VFX
+        [ServerRpc(RequireOwnership = false)]
+        public void LookServerRpc(bool look) {
+            LookClientRpc(look);
+        }
+
+        [ClientRpc]
+        public void LookClientRpc(bool look) {
+            lookAtPlayer = look;
+            if (!look) {
+                return;
             }
+            eye.LookAt(targetPlayer.gameObject.transform);
+            AudioClip spottedSFX = spottedSounds[Random.Range(0,spottedSounds.Length)];
+            creatureSFX.PlayOneShot(spottedSFX);
         }
         /*
             DoAIInterval runs every X seconds as defined in Unity (not every frame, allows heavier calculations)
@@ -112,38 +135,25 @@ namespace SCP106 {
             base.DoAIInterval();
             switch(currentBehaviourStateIndex){
                 case (int)State.SEARCHING:
-                    agent.speed = 2f;
-                    creatureAnimator.SetFloat("speedMultiplier", 2f);
                     StopChaseMusicIfNoOneNearbyAndLimitReached();
                     HuntIfPlayerIsInSight();
                     break;
 
                 case (int)State.SPOTTED:
-                    agent.speed = 0f;
-                    creatureAnimator.SetFloat("speedMultiplier", 1f);
                     break;
 
                 case (int)State.HUNTING:
-                    agent.speed = 3f;
-                    creatureAnimator.SetFloat("speedMultiplier", 3f);
-                    float distanceBetweenPlayer = Vector3.Distance(transform.position, targetPlayer.transform.position);
-                    float maxDistanceToHunt = 20f;
-                    bool playerInSight = HasLineOfSightToPosition(targetPlayer.transform.position);
-                    // If player moves too far away - or out of sight - stop hunting.
-                    if(!TargetClosestPlayerInAnyCase() || (distanceBetweenPlayer > maxDistanceToHunt && !playerInSight)){
-                        LogIfDebugBuild("[SCP-106] Stop Target Player, going to Searching State");
-                        targetPlayer = null;
-                        StartSearch(transform.position);
-                        SwitchToBehaviourClientRpc((int)State.SEARCHING);
-                        //chaseSource.Stop();
-                        return;
-                    }
-                    SetDestinationToPosition(targetPlayer.transform.position, checkForPath: false);
+                    SearchIfPlayerIsTooFarAway();
                     break;
+
+                case (int)State.KILLING:
+                    break;
+                    
                 default:
-                    LogIfDebugBuild("[SCP-106] Went to inexistent state!");
+                    LogIfDebugBuild("Went to inexistent state!");
                     break;
             }
+            SyncPositionToClients();
         }
 
         /*
@@ -168,24 +178,49 @@ namespace SCP106 {
             If player sees SCP-106 while SCP-106 is Searching, SCP starts hunting them.
         */
         private void HuntIfPlayerIsInSight() {
+            if (currentBehaviourStateIndex == (int)State.SPOTTED){
+                return;
+            }
+
             PlayerControllerB closestPlayerInSight = GetClosestPlayer(requireLineOfSight: true, cannotBeInShip: true, cannotBeNearShip: true);
             if (closestPlayerInSight == null) {
                 return;
             }
+
             bool playerIsLooking = PlayerLookingAtMe(closestPlayerInSight);
             if (playerIsLooking) {
                 StopSearch(currentSearch);
-                targetPlayer = closestPlayerInSight;
+                ChangeTargetPlayerServerRpc((int)closestPlayerInSight.playerClientId);
 
                 // Check if we should do the Spotted sequence or go straight to Hunting
                 if (timeSinceSpottedLocalPlayer < spottedSFXCooldown) {
                     ToStateHunting();
                 }
                 else { // Spotted Sequence
+                    timeSinceSpottedLocalPlayer = 0;
                     ToStateSpotted();
                 }
             }
             //SetMovingTowardsTargetPlayer()
+        }
+
+        /*
+            FROM STATE, TO STATE = (HUNTING,SEARCHING)
+            If target player out of sight, and too far away, go into Search mode.
+        */
+        private void SearchIfPlayerIsTooFarAway() {
+            float distanceBetweenPlayer = Vector3.Distance(transform.position, targetPlayer.transform.position);
+            float maxDistanceToHunt = 20f;
+            bool playerInSight = HasLineOfSightToPosition(targetPlayer.transform.position);
+            // If player moves too far away - or out of sight - stop hunting.
+            if(!TargetClosestPlayerInAnyCase() || (distanceBetweenPlayer > maxDistanceToHunt && !playerInSight)){
+                LogIfDebugBuild("Searching State");
+                ChangeTargetPlayerServerRpc(-1);
+                StartSearch(transform.position);
+                SwitchToBehaviourServerRpc((int)State.SEARCHING);
+                return;
+            }
+            SetDestinationToPosition(targetPlayer.transform.position, checkForPath: false);
         }
 
         /*
@@ -199,35 +234,79 @@ namespace SCP106 {
                 return;
             }
             LogIfDebugBuild("[SCP-106] SCP-106 has been Spotted!");
-            timeSinceSpottedLocalPlayer = 0;
-            SwitchToBehaviourClientRpc((int)State.SPOTTED);
-            creatureAnimator.SetTrigger("startSpotted");
-        }
-
-        /*
-            Called by Unity Animation Event (Spotted)
-        */
-        public void SpottedSequence() {
-            // SFX
-            AudioClip spottedSFX = spottedSounds[Random.Range(0,spottedSounds.Length)];
-            creatureSFX.PlayOneShot(spottedSFX);
+            SwitchToBehaviourServerRpc((int)State.SPOTTED);
+            DoAnimationServerRpc((int)State.SPOTTED);
         }
 
         /*
             FROM STATE, TO STATE (SPOTTED,HUNTING)
-            Called by end of Unity Animation Event (Spotted)
         */
         public void ToStateHunting() {
             // States
             LogIfDebugBuild("[SCP-106] SCP-106 is hunting!");
-            SwitchToBehaviourClientRpc((int)State.HUNTING);
+            SwitchToBehaviourServerRpc((int)State.HUNTING);
+            DoAnimationServerRpc((int)State.HUNTING);
             timeSinceHuntStart = 0;
-            creatureAnimator.SetTrigger("startWalk");
+
+            // Fear Level
+            PlayerControllerB[] allInSight = GetAllPlayersInLineOfSight(45,60,eye);
+            if (allInSight != null){
+                foreach (PlayerControllerB player in allInSight)
+                {
+                    player.JumpToFearLevel(0.5f);
+                }
+            }
+
             // SFX
             if (!chaseSource.isPlaying) {
                 chaseSource.Play();
             }
         }
+
+/* * UNITY ANIMATION EVENTS START * * /
+        /*
+        Called everytime SCP-106 lands a foot on the ground (Unity Animation Event)
+        */
+        public void PlayFootstepSound(){
+            AudioClip step = footstepSounds[Random.Range(0,footstepSounds.Length)];
+            creatureSFX.PlayOneShot(step);
+        }
+
+        /*
+            SPOTTED - Called by Unity Animation Event
+        */
+        public void LookAtPlayer(HeadState state) {
+            LogIfDebugBuild($"LookAtPlayer: {(int)state}");
+            if (currentBehaviourStateIndex != (int)State.SPOTTED){
+                LogIfDebugBuild("LookAtPlayer ignored, not in Spotted state!");
+                return;
+            }
+            switch(state) {
+                case HeadState.StartLookingAtPlayer:
+                    LookServerRpc(true);
+                    break;
+                case HeadState.FinishedLookingAtPlayer:
+                    LookServerRpc(false);
+                    ToStateHunting();
+                    break;
+                default:
+                    LogIfDebugBuild("Unmatched HeadState case!");
+                    break;
+            }
+        }
+
+        public void AnimationEventStareKill() {
+            StartCoroutine(ConsumePlayerCamera());
+        }
+
+        public IEnumerator ConsumePlayerCamera() {
+            while (KillingPlayer && targetPlayer.health != 0) {
+                Vector3.Lerp(targetPlayer.gameObject.transform.position, transform.position, 5f * Time.deltaTime);
+                yield return null;
+            }
+        }
+
+/* * UNITY ANIMATION EVENTS END * /
 
         /*
             Given a player (within line of sight), returns whether or not they are looking at SCP-106.
@@ -238,12 +317,6 @@ namespace SCP106 {
             float proximityAwareness = -1;
             int viewRange = 60;
             return player.HasLineOfSightToPosition(myPosition,fovWidth,viewRange,proximityAwareness);
-        }
-
-        // Called everytime SCP-106 lands a foot on the ground (Unity Animation Event)
-        public void PlayFootstepSound(){
-            AudioClip step = footstepSounds[Random.Range(0,footstepSounds.Length)];
-            creatureSFX.PlayOneShot(step);
         }
 
         /*
@@ -280,7 +353,9 @@ namespace SCP106 {
 
         /*
             Sets the TargetPlayer to the player who is furthest away from the other players.
-        */
+            TODO: If timeSinceHuntStart is more than 2 min (i.e haven't seen any player in 2 min), "emerge" from beneath
+            close to a NavMesh node to a player who is alone / a player who is alone & furthest away from others.
+        */ 
         private void HuntLoneliestPlayer() {
             // PlayerControllerB "isPlayerAlone" bool
         }
@@ -289,17 +364,75 @@ namespace SCP106 {
             Called when SCP-106 touches / collides with an object (e.g. Player)
         */
         public override void OnCollideWithPlayer(Collider other) {
+            if (KillingPlayer){
+                LogIfDebugBuild("Collision ignored, already killing a player");
+                return;
+            }
             if (timeSinceHittingLocalPlayer < 1f) {
                 return;
             }
             PlayerControllerB playerControllerB = MeetsStandardPlayerCollisionConditions(other);
-            if (playerControllerB != null)
+            if (playerControllerB != null && !playerControllerB.isPlayerDead)
             {
-                LogIfDebugBuild("[SCP-106] SCP-106 Collision with Player!");
+                GrabAndKillPlayerServerRpc((int)playerControllerB.playerClientId);
                 timeSinceHittingLocalPlayer = 0f;
-                playerControllerB.DamagePlayer(20);
             }
         }
+
+        /*
+            SCP forces targetPlayer to face them, enters into an animation and then kills the player.
+            TODO: Allow to be interrupted by hitting SCP, saving the player
+        */
+        [ServerRpc(RequireOwnership = false)]
+        public void GrabAndKillPlayerServerRpc(int playerClientId) {
+            GrabAndKillPlayerClientRpc(playerClientId);
+        }
+        [ClientRpc]
+        public void GrabAndKillPlayerClientRpc(int playerClientId) {
+            StartCoroutine(GrabPlayer(playerClientId));
+        }
+
+        /* [CALLED BY SERVER RPC] (make Client calls only inside here)
+            Grabs and kills the target player
+        */
+        public IEnumerator GrabPlayer(int playerClientId) {
+            LogIfDebugBuild("Grab Player Called");
+            PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
+            if (!KillingPlayer){
+                // SCP Object Manipulation
+                KillingPlayer = true;
+                SwitchToBehaviourClientRpc((int)State.KILLING);
+                DoAnimationClientRpc((int)State.KILLING);
+
+                // Player Model Manipulation
+                player.movementSpeed = 0;
+                StartCoroutine(MakePlayerFaceSCP(playerClientId));
+
+                // Wait for animation to Finish
+                yield return new WaitForSeconds(1.5f);
+
+                // Kill
+                Vector3 velocity = new(0,3,0);
+                player.KillPlayer(velocity,true,CauseOfDeath.Suffocation,1);
+
+                // Return state
+                SwitchToBehaviourClientRpc((int)State.SEARCHING);
+                DoAnimationClientRpc((int)State.SEARCHING);
+                KillingPlayer = false;
+            }
+        }
+
+        // Makes the target player turn towards SCP's face
+        public IEnumerator MakePlayerFaceSCP(int playerClientId) {
+            LogIfDebugBuild("Make Player Face SCP Called");
+            PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
+            Vector3 myDirection = transform.position - player.gameObject.transform.position;
+            while (player.health != 0){
+                player.gameObject.transform.rotation = Quaternion.Lerp(player.gameObject.transform.rotation, Quaternion.LookRotation(myDirection), Time.deltaTime *5f);
+                yield return null;
+            }
+        }
+
 
         /*
             Called when a Player hits / attacks SCP-106
@@ -324,10 +457,71 @@ namespace SCP106 {
             }
         }
 
+/* * RPC FUNCTIONS * */
+
+        // Change TargetPlayer
+        [ServerRpc(RequireOwnership = false)]
+        public void ChangeTargetPlayerServerRpc(int newTargetPlayerId) {
+            ChangeTargetPlayerClientRpc(newTargetPlayerId);
+        }
+
         [ClientRpc]
-        public void DoAnimationClientRpc(string animationName) {
-            LogIfDebugBuild($"Animation: {animationName}");
-            creatureAnimator.SetTrigger(animationName);
+        public void ChangeTargetPlayerClientRpc(int newTargetPlayerId) {
+            if (newTargetPlayerId == -1){
+                targetPlayer = null;
+                LogIfDebugBuild("Target : Null");
+            }
+            else {
+                targetPlayer = StartOfRound.Instance.allPlayerScripts[newTargetPlayerId];
+                LogIfDebugBuild($"Target : {newTargetPlayerId}");
+            }
+        }
+
+        // Play SFX
+        [ClientRpc]
+        public void PlaySFXClientRpc() {
+
+        }
+
+        // Sync animation
+        [ServerRpc(RequireOwnership = false)]
+        public void DoAnimationServerRpc(int newStateIndex) {
+            DoAnimationClientRpc(newStateIndex);
+        }
+
+        [ClientRpc]
+        public void DoAnimationClientRpc(int newStateIndex) {
+            switch(newStateIndex){
+                case (int)State.SEARCHING:
+                    LogIfDebugBuild("Searching State!");
+                    targetPlayer = null;
+                    creatureAnimator.SetTrigger("startWalk");
+                    creatureAnimator.speed = 2f;
+                    agent.speed = 2f;
+                    agent.isStopped = false;
+                    break;
+                case (int)State.SPOTTED:
+                    LogIfDebugBuild("Spotted State!");
+                    creatureAnimator.SetTrigger("startSpotted");
+                    creatureAnimator.speed = 1f;
+                    agent.speed = 0f;
+                    agent.isStopped = true;
+                    break;
+                case (int)State.HUNTING:
+                    LogIfDebugBuild("Hunting State!");
+                    creatureAnimator.SetTrigger("startWalk");
+                    creatureAnimator.speed = 3f;
+                    agent.speed = 3f;
+                    agent.isStopped = false;
+                    break;
+                case (int)State.KILLING:
+                    LogIfDebugBuild("Killing State!");
+                    creatureAnimator.SetTrigger("startKill");
+                    creatureAnimator.speed = 1f;
+                    agent.isStopped = true;
+                    agent.speed = 0f;
+                    break;
+            }
         }
 
         [ClientRpc]
