@@ -72,7 +72,7 @@ MonoBehaviour:
   isDaytimeEnemy: 0
   normalizedTimeInDayToLeave: 0.5
   stunTimeMultiplier: 3
-  doorSpeedMultiplier: 0.25
+  doorSpeedMultiplier: 1
   stunGameDifficultyMultiplier: 1
   canBeStunned: 1
   canDie: 0

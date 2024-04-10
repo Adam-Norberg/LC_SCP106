@@ -7129,6 +7129,14 @@ MonoBehaviour:
     IsAnimTrigger: 0
     parameterString: 
     boolValue: 0
+  - name: EMERGING
+    VoiceClip: {fileID: 0}
+    playOneShotVoice: 0
+    SFXClip: {fileID: 8300000, guid: 05b96055499019b4aa4703e33e84926b, type: 3}
+    playOneShotSFX: 0
+    IsAnimTrigger: 0
+    parameterString: 
+    boolValue: 0
   currentBehaviourState:
     name: 
     VoiceClip: {fileID: 0}
@@ -7197,7 +7205,6 @@ MonoBehaviour:
   boneNeck: {fileID: 4146070536710641901}
   turnReference: {fileID: 1484140687101659040}
   chaseSource: {fileID: 5077182025757040605}
-  stepSource: {fileID: 4270184360172832982}
   footstepSounds:
   - {fileID: 8300000, guid: 702e32299faf7aa43b9581ef1e518cde, type: 3}
   - {fileID: 8300000, guid: 016d6d5907180454db4e0f3ae827c6dc, type: 3}
@@ -7209,8 +7216,14 @@ MonoBehaviour:
   neckSounds:
   - {fileID: 8300000, guid: a136cf29e08e7c5438daee70f2b5ec76, type: 3}
   - {fileID: 8300000, guid: 64f2b68d6a475c946adba8af50b3bb96, type: 3}
+  killingSounds:
+  - {fileID: 8300000, guid: 77b0c23f838c95f4c85c4ed5b0428a3b, type: 3}
+  - {fileID: 8300000, guid: 96cedd2d5e1129449b8dacfbb9867fed, type: 3}
+  playerKilledSounds:
+  - {fileID: 8300000, guid: a1bc650d4baa40747a3d3c779ab657d6, type: 3}
   creatureVFX: {fileID: 442043254773340170}
   lookAtPlayer: 0
+  KillingPlayer: 0
 --- !u!4 &2272375401868457926 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 0633f14d6b2f7a3478fca8bf4b00a8c8,

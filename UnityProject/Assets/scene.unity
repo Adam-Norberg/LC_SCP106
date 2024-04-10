@@ -389,6 +389,16 @@ PrefabInstance:
       propertyPath: debugObject
       value: 
       objectReference: {fileID: 47467716}
+    - target: {fileID: -897701651908670791, guid: 113b55c727d0c7d4c806cccd711bbfca,
+        type: 3}
+      propertyPath: killingSounds.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: -897701651908670791, guid: 113b55c727d0c7d4c806cccd711bbfca,
+        type: 3}
+      propertyPath: killingSounds.Array.data[1]
+      value: 
+      objectReference: {fileID: 8300000, guid: 96cedd2d5e1129449b8dacfbb9867fed, type: 3}
     - target: {fileID: 2105261280653135, guid: 113b55c727d0c7d4c806cccd711bbfca, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 20.806496
@@ -420,6 +430,16 @@ PrefabInstance:
         type: 3}
       propertyPath: Loop
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 464050888913662786, guid: 113b55c727d0c7d4c806cccd711bbfca,
+        type: 3}
+      propertyPath: m_Volume
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 464050888913662786, guid: 113b55c727d0c7d4c806cccd711bbfca,
+        type: 3}
+      propertyPath: m_PlayOnAwake
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 483970093051262097, guid: 113b55c727d0c7d4c806cccd711bbfca,
         type: 3}
@@ -1192,7 +1212,8 @@ PrefabInstance:
       value: 15.739432
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 2594600603725774373, guid: 113b55c727d0c7d4c806cccd711bbfca, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 113b55c727d0c7d4c806cccd711bbfca, type: 3}
