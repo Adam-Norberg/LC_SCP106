@@ -76,8 +76,8 @@ TagManager:
   - PlaceableShipObjects
   - PlacementBlocker
   - Railing
-  - 
-  - 
+  - Mask
+  - SeeThrough
   - 
   m_SortingLayers:
   - name: Default

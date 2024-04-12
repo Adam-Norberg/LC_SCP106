@@ -8,11 +8,15 @@ namespace SCP106.Configuration {
     {
         // For more info on custom configs, see https://lethal.wiki/dev/intermediate/custom-configs
         public ConfigEntry<int> SpawnWeight;
+        public ConfigEntry<bool> OutsideEnemy;
         public PluginConfig(BaseUnityPlugin plugin)
         {
-            SpawnWeight = plugin.Config.Bind("SCP106", "Spawn weight", 20,
+            SpawnWeight = plugin.Config.Bind("SCP-106", "SpawnWeight", 20,
                 "The spawn chance weight for SCP-106, relative to other existing enemies.\n" +
                 "Goes up from 0, lower is more rare, 100 and up is very common.");
+
+            OutsideEnemy = plugin.Config.Bind("SCP-106.Toggles", "OutsideEnemy", false, 
+                "Whether SCP-106 is able to go outside or not (default false)");
             
             ClearUnusedEntries(plugin);
         }
