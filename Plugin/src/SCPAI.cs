@@ -76,7 +76,7 @@ namespace SCP106 {
 
         [Conditional("DEBUG")]
         void LogIfDebugBuild(string text) {
-            Plugin.Logger.LogInfo(text);
+            //Plugin.Logger.LogInfo(text);
         }
 
         /*
@@ -281,13 +281,17 @@ namespace SCP106 {
             if(!TargetClosestPlayerInAnyCase() || (distanceBetweenPlayer > maxDistanceToHunt && !playerInSight)){
                 LogIfDebugBuild("Searching State");
                 ChangeTargetPlayerServerRpc(-1);
+                StopSearch(currentSearch);
                 SwitchToBehaviourServerRpc((int)State.SEARCHING);
+                DoAnimationServerRpc((int)State.SEARCHING);
                 return;
             }
             if(!targetPlayer.isInsideFactory){
                 LogIfDebugBuild("Searching State");
                 ChangeTargetPlayerServerRpc(-1);
+                StopSearch(currentSearch);
                 SwitchToBehaviourServerRpc((int)State.SEARCHING);
+                DoAnimationServerRpc((int)State.SEARCHING);
                 return;
             }
             SetDestinationToPosition(targetPlayer.transform.position, checkForPath: false);
@@ -558,7 +562,7 @@ namespace SCP106 {
                 yield return new WaitForSeconds(0.25f);
                 PlaySFXClientRpc((int)SFX.Killing);
                 creatureVFX.Play();
-                Coroutine voiceCoroutine = StartCoroutine(PitchDownPlayerAudio(playerClientId));
+                //Coroutine voiceCoroutine = StartCoroutine(PitchDownPlayerAudio(playerClientId));
                 
                 yield return new WaitForSeconds(0.25f);
                 inSpecialAnimationWithPlayer.AddBloodToBody();
@@ -594,7 +598,7 @@ namespace SCP106 {
                 FinishGrabPlayer();
                 // Stop Coroutines, just in case
                 StopCoroutine(faceCoroutine);
-                StopCoroutine(voiceCoroutine);
+                //StopCoroutine(voiceCoroutine);
             }
         }
 
