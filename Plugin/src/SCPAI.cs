@@ -26,6 +26,8 @@ namespace SCP106 {
         public AudioClip[] neckSounds; // SFX for when turning head towards player, and when twisting player's neck
         public AudioClip[] killingSounds; // SCP sounds when they kill a player
         public AudioClip[] playerKilledSounds; // Player sounds when they are killed
+        public AudioClip sinkSFX;
+        public AudioClip emergeSFX;
 
         public ParticleSystem creatureVFX;
 
@@ -35,12 +37,15 @@ namespace SCP106 {
         public bool KillingPlayer = false;
 
         #pragma warning restore 0649
-        float timeSinceHittingLocalPlayer;
-        float timeSinceSpottedLocalPlayer = 60;
+        float timeSinceHittingLocalPlayer = 0;
+        float timeSinceSpottedPlayer = 60;
         float timeSinceHeardNoise = 15;
+        float timeSinceHuntStart = 0;
+
         readonly float spottedSFXCooldown = 60; // Cooldown in Seconds between doing the surprised "Spotted" sequence
         readonly float chaseMusicLimit = 5; // Play chase music for 60 seconds, then check if we can turn it off (only if no one nearby)
-        private float timeSinceHuntStart = 0;
+        readonly float emergeCooldown = 120; // After this many seconds of not seeing a player, emerge near the loneliest one.
+
         public enum State { // SCP Creature States
             IDLE,
             SEARCHING,
@@ -62,7 +67,6 @@ namespace SCP106 {
             Killing,
             PlayerKilled,
         }
-
         public enum KillState { // SCP Kill States (Kill Animations / Kill Events, e.g. "Death by PukingAtPlayer")
             StaringAtPlayer, // General Collision Kill
             NeckSnap, // If SCP kills from behind
@@ -71,7 +75,7 @@ namespace SCP106 {
 
         [Conditional("DEBUG")]
         void LogIfDebugBuild(string text) {
-            Plugin.Logger.LogInfo(text);
+            //Plugin.Logger.LogInfo(text);
         }
 
         /*
@@ -93,6 +97,7 @@ namespace SCP106 {
 
         [ClientRpc]
         public void InitSCPValuesClientRpc() {
+            // Setup the default values, e.g. config values
             creatureAnimator.SetTrigger("startStill");
             StartCoroutine(SpawnDelay());
         }
@@ -110,7 +115,7 @@ namespace SCP106 {
         public override void Update() {
             base.Update();
             timeSinceHittingLocalPlayer += Time.deltaTime;
-            timeSinceSpottedLocalPlayer += Time.deltaTime;
+            timeSinceSpottedPlayer += Time.deltaTime;
             timeSinceHuntStart += Time.deltaTime;
             timeSinceHeardNoise += Time.deltaTime;
         }
@@ -153,6 +158,7 @@ namespace SCP106 {
                 case (int)State.SEARCHING:
                     StopChaseMusicIfNoOneNearbyAndLimitReached();
                     HuntIfPlayerIsInSight();
+                    HuntLoneliestPlayer();
                     break;
 
                 case (int)State.SPOTTED:
@@ -214,11 +220,11 @@ namespace SCP106 {
                 ChangeTargetPlayerServerRpc((int)closestPlayerInSight.playerClientId);
 
                 // Check if we should do the Spotted sequence or go straight to Hunting
-                if (timeSinceSpottedLocalPlayer < spottedSFXCooldown) {
+                if (timeSinceSpottedPlayer < spottedSFXCooldown) {
                     ToStateHunting();
                 }
                 else { // Spotted Sequence
-                    timeSinceSpottedLocalPlayer = 0;
+                    timeSinceSpottedPlayer = 0;
                     ToStateSpotted();
                 }
             } else {
@@ -272,7 +278,17 @@ namespace SCP106 {
             if(!TargetClosestPlayerInAnyCase() || (distanceBetweenPlayer > maxDistanceToHunt && !playerInSight)){
                 LogIfDebugBuild("Searching State");
                 ChangeTargetPlayerServerRpc(-1);
+                StopSearch(currentSearch);
                 SwitchToBehaviourServerRpc((int)State.SEARCHING);
+                DoAnimationServerRpc((int)State.SEARCHING);
+                return;
+            }
+            if(!targetPlayer.isInsideFactory){
+                LogIfDebugBuild("Searching State");
+                ChangeTargetPlayerServerRpc(-1);
+                StopSearch(currentSearch);
+                SwitchToBehaviourServerRpc((int)State.SEARCHING);
+                DoAnimationServerRpc((int)State.SEARCHING);
                 return;
             }
             SetDestinationToPosition(targetPlayer.transform.position, checkForPath: false);
@@ -305,10 +321,6 @@ namespace SCP106 {
             DoAnimationServerRpc((int)State.HUNTING);
             timeSinceHuntStart = 0;
 
-            // SFX
-            /*if (!chaseSource.isPlaying) {
-                chaseSource.Play();
-            }*/
             PlaySFXServerRpc((int)SFX.Chasing, true);
         }
 
@@ -400,20 +412,84 @@ namespace SCP106 {
         }
 
         /*
+            [SEARCHING -> EMERGE]
             Sets the TargetPlayer to the player who is furthest away from the other players.
-            TODO: If timeSinceHuntStart is more than 2 min (i.e haven't seen any player in 2 min), "emerge" from beneath
-            close to a NavMesh node to a player who is alone / a player who is alone & furthest away from others.
         */ 
-        private void HuntLoneliestPlayer() {
-            // PlayerControllerB "isPlayerAlone" bool
+        public void HuntLoneliestPlayer() {
+            if (currentBehaviourStateIndex != (int)State.SEARCHING && timeSinceHuntStart > emergeCooldown) {
+                return;
+            }
+            foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
+            {
+                // Note: 'isPlayerAlone' only becomes true if 1. no one near them, 2. hears no one in WalkieTalkie, and 3. >1 player in lobby/game
+                if (player.isInsideFactory && (player.isPlayerAlone || StartOfRound.Instance.livingPlayers == 1)){
+                    LogIfDebugBuild("Warping to loneliest player");
+                    StopSearch(currentSearch);
+                    SwitchToBehaviourServerRpc((int)State.EMERGING);
+                    ChangeTargetPlayerServerRpc((int)player.playerClientId);
+                    StartEmergeSequenceServerRpc((int)player.playerClientId);
+                }
+            }
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void StartEmergeSequenceServerRpc(int playerClientId) {
+            StartEmergeSequenceClientRpc(playerClientId);
+        }
+
+        [ClientRpc]
+        public void StartEmergeSequenceClientRpc(int playerClientId) {
+            StartCoroutine(EmergeNearPlayer(playerClientId));
+        }
+
+        public IEnumerator EmergeNearPlayer(int playerClientId) {
+            // Do and wait for Sink Animation to finish
+            timeSinceHuntStart = 0;
+            creatureAnimator.SetTrigger("startSink");
+            creatureSFX.PlayOneShot(sinkSFX);
+            yield return new WaitForSeconds(3f);
+
+            // Get Player Position
+            PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
+            Vector3 playerPosition = player.transform.position;
+            Vector3 closestNodeToPlayer = ChooseClosestNodeToPosition(playerPosition, true).position;
+            // If player has left since emerge started, then re-appear back to original position.
+            if (!player.isInsideFactory){
+                creatureAnimator.speed = 0.7f;
+                creatureAnimator.SetTrigger("startEmerge");
+                creatureSFX.PlayOneShot(emergeSFX);
+                yield return new WaitForSeconds(10f);
+                SwitchToBehaviourClientRpc((int)State.SEARCHING);
+                DoAnimationClientRpc((int)State.SEARCHING);
+                yield break;
+            }
+            // Create Corrosion at playerPosition (TODO), and Emerge from it
+            creatureAnimator.speed = 0.7f;
+            creatureAnimator.SetTrigger("startEmerge");
+            creatureSFX.PlayOneShot(emergeSFX);
+            agent.Warp(closestNodeToPlayer);
+            agent.speed = 0;
+            agent.enabled = false;
+
+            yield return new WaitForSeconds(10f);
+
+            // When fully emerged, start hunting player (or searching if they already ran away)
+            agent.enabled = true;
+            SwitchToBehaviourClientRpc((int)State.HUNTING);
+            DoAnimationClientRpc((int)State.HUNTING);
+            PlaySFXServerRpc((int)SFX.Chasing, true);
+            timeSinceHuntStart = 0;
         }
 
         /*
             Called when SCP-106 touches / collides with an object (e.g. Player)
         */
         public override void OnCollideWithPlayer(Collider other) {
+            if (currentBehaviourStateIndex == (int)State.EMERGING ||
+                currentBehaviourStateIndex == (int)State.KILLING){
+                return;
+            }
             if (KillingPlayer){
-                LogIfDebugBuild("Collision ignored, already killing a player");
                 return;
             }
             if (timeSinceHittingLocalPlayer < 1f) {
@@ -422,6 +498,7 @@ namespace SCP106 {
             PlayerControllerB playerControllerB = MeetsStandardPlayerCollisionConditions(other);
             if (playerControllerB != null && !playerControllerB.isPlayerDead)
             {
+                //PushPlayerServerRpc((int)playerControllerB.playerClientId);
                 GrabAndKillPlayerServerRpc((int)playerControllerB.playerClientId);
                 timeSinceHittingLocalPlayer = 0f;
             }
@@ -484,7 +561,7 @@ namespace SCP106 {
                 yield return new WaitForSeconds(0.25f);
                 PlaySFXClientRpc((int)SFX.Killing);
                 creatureVFX.Play();
-                Coroutine voiceCoroutine = StartCoroutine(PitchDownPlayerAudio(playerClientId));
+                //Coroutine voiceCoroutine = StartCoroutine(PitchDownPlayerAudio(playerClientId));
                 
                 yield return new WaitForSeconds(0.25f);
                 inSpecialAnimationWithPlayer.AddBloodToBody();
@@ -520,7 +597,7 @@ namespace SCP106 {
                 FinishGrabPlayer();
                 // Stop Coroutines, just in case
                 StopCoroutine(faceCoroutine);
-                StopCoroutine(voiceCoroutine);
+                //StopCoroutine(voiceCoroutine);
             }
         }
 
@@ -549,8 +626,28 @@ namespace SCP106 {
             StopCoroutine(killCoroutine);
         }
 
-        private void PushPlayer() {
-            
+        [ServerRpc(RequireOwnership = false)]
+        public void PushPlayerServerRpc(int playerClientId) {
+            PushPlayerClientRpc(playerClientId);
+        }
+
+        [ClientRpc]
+        public void PushPlayerClientRpc(int playerClientId) {
+            StartCoroutine(SmoothPushPlayer(playerClientId));
+        }
+
+        private IEnumerator SmoothPushPlayer(int playerClientId) {
+            PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
+            Vector3 scpDirection = transform.forward * 6f;
+            Vector3 playerStartPosition = player.gameObject.transform.position;
+            Vector3 newPlayerPosition = playerStartPosition + scpDirection;
+            for (int i = 0; i < 24; i++){
+                player.gameObject.transform.position = Vector3.Lerp(playerStartPosition, newPlayerPosition, Time.deltaTime * 5f);
+                yield return null;
+            }
+            agent.speed = 0f;
+            yield return new WaitForSeconds(2f);
+            agent.speed = 3f;
         }
 
 /* * [KILLING ANIMATIONS END] * */
@@ -670,6 +767,7 @@ namespace SCP106 {
                     LogIfDebugBuild("Hunting State!");
                     creatureAnimator.SetTrigger("startWalk");
                     creatureAnimator.speed = 3f;
+                    timeSinceSpottedPlayer = 0f;
                     agent.speed = 3f;
                     agent.isStopped = false;
                     break;
