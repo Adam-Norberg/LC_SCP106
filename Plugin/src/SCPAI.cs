@@ -273,7 +273,7 @@ namespace SCP106 {
         private void SearchIfPlayerIsTooFarAway() {
             float distanceBetweenPlayer = Vector3.Distance(transform.position, targetPlayer.transform.position);
             float maxDistanceToHunt = 20f;
-            bool playerInSight = HasLineOfSightToPosition(targetPlayer.transform.position);
+            bool playerInSight = CheckLineOfSightForPosition(targetPlayer.transform.position);
             // If player moves too far away - or out of sight - stop hunting.
             if(!TargetClosestPlayerInAnyCase() || (distanceBetweenPlayer > maxDistanceToHunt && !playerInSight)){
                 LogIfDebugBuild("Searching State");
@@ -659,7 +659,7 @@ namespace SCP106 {
         /*
             Called when a Player hits / attacks SCP-106
         */
-        public override void HitEnemy(int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false) {
+        /*public override void HitEnemy(int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false) {
             base.HitEnemy(force, playerWhoHit, playHitSFX);
             if(isEnemyDead){
                 return;
@@ -671,7 +671,7 @@ namespace SCP106 {
                     KillEnemyOnOwnerClient();
                 }
             }
-        }
+        }*/
 
 /* * [RPC FUNCTIONS START] * */
 
