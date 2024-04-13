@@ -30,7 +30,7 @@ namespace SCP106 {
             // You may want to rename your asset bundle from the AssetBundle Browser in order to avoid an issue with
             // asset bundle identifiers being the same between multiple bundles, allowing the loading of only one bundle from one mod.
             // In that case also remember to change the asset bundle copying code in the csproj.user file.
-            var bundleName = "modassets";
+            var bundleName = "scp106";
             ModAssets = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Info.Location), bundleName));
             if (ModAssets == null) {
                 Logger.LogError($"Failed to load custom assets.");

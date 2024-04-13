@@ -13,4 +13,4 @@ Place both files inside BepInEx/Plugins
 - Hamunii (and all people listed in their credits!) for the Template - https://github.com/Hamunii/LC-ExampleEnemy
 
 ## Afterwords
-Please report any glitches or bugs that you experience to me. I plan on adding more functionalities and configurations in the future as I learn modding & Unity more and more.
+As this is my first mod and time with Unity, please report any glitches or bugs that you may experience to me. More functionalities are planned for the future.

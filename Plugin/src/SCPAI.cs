@@ -416,7 +416,10 @@ namespace SCP106 {
             Sets the TargetPlayer to the player who is furthest away from the other players.
         */ 
         public void HuntLoneliestPlayer() {
-            if (currentBehaviourStateIndex != (int)State.SEARCHING && timeSinceHuntStart > emergeCooldown) {
+            if (currentBehaviourStateIndex != (int)State.SEARCHING) {
+                return;
+            }
+            if (timeSinceHuntStart < emergeCooldown) {
                 return;
             }
             foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
@@ -428,6 +431,7 @@ namespace SCP106 {
                     SwitchToBehaviourServerRpc((int)State.EMERGING);
                     ChangeTargetPlayerServerRpc((int)player.playerClientId);
                     StartEmergeSequenceServerRpc((int)player.playerClientId);
+                    return;
                 }
             }
         }
