@@ -1,5 +1,5 @@
 [config]
-schemaVersion = "0.0.1"
+schemaVersion = "1.0.0"
 
 [general]
 repository = "https://thunderstore.io"
@@ -22,7 +22,7 @@ source = "../bin/Release/netstandard2.1/SCP106.dll"
 target = "plugins/SCP106/"
 
 [[build.copy]]
-source = "../../UnityProject/AssetBundles/StandaloneWindows/modassets"
+source = "../../UnityProject/AssetBundles/StandaloneWindows/scp106"
 target = "plugins/SCP106/"
 
 [[build.copy]]
