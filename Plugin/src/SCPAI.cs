@@ -35,7 +35,6 @@ namespace SCP106 {
 
         public bool lookAtPlayer = false;
         public bool KillingPlayer = false;
-        public bool CanGoOutside = false;
 
         #pragma warning restore 0649
         float timeSinceHittingLocalPlayer = 0;
@@ -45,7 +44,7 @@ namespace SCP106 {
 
         readonly float spottedSFXCooldown = 60; // Cooldown in Seconds between doing the surprised "Spotted" sequence
         readonly float chaseMusicLimit = 5; // Play chase music for 60 seconds, then check if we can turn it off (only if no one nearby)
-        readonly float emergeCooldown = 70; // After this many seconds of not seeing a player, emerge near the loneliest one.
+        readonly float emergeCooldown = 120; // After this many seconds of not seeing a player, emerge near the loneliest one.
 
         public enum State { // SCP Creature States
             IDLE,
@@ -85,7 +84,7 @@ namespace SCP106 {
         public override void Start() {
             base.Start();
             LogIfDebugBuild("SCP-106 has Spawned");
-        
+
             InitSCPValuesServerRpc();
             timeSinceHittingLocalPlayer = 0;
             timeSinceHeardNoise = 15;
@@ -99,8 +98,6 @@ namespace SCP106 {
         [ClientRpc]
         public void InitSCPValuesClientRpc() {
             // Setup the default values, e.g. config values
-            CanGoOutside = Plugin.BoundConfig.OutsideEnemy.Value;
-
             creatureAnimator.SetTrigger("startStill");
             StartCoroutine(SpawnDelay());
         }
@@ -419,7 +416,7 @@ namespace SCP106 {
             Sets the TargetPlayer to the player who is furthest away from the other players.
         */ 
         public void HuntLoneliestPlayer() {
-            if (currentBehaviourStateIndex != (int)State.SEARCHING || timeSinceSpottedPlayer < emergeCooldown) {
+            if (currentBehaviourStateIndex != (int)State.SEARCHING && timeSinceHuntStart > emergeCooldown) {
                 return;
             }
             foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
@@ -447,6 +444,7 @@ namespace SCP106 {
 
         public IEnumerator EmergeNearPlayer(int playerClientId) {
             // Do and wait for Sink Animation to finish
+            timeSinceHuntStart = 0;
             creatureAnimator.SetTrigger("startSink");
             creatureSFX.PlayOneShot(sinkSFX);
             yield return new WaitForSeconds(3f);
@@ -454,6 +452,7 @@ namespace SCP106 {
             // Get Player Position
             PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
             Vector3 playerPosition = player.transform.position;
+            Vector3 closestNodeToPlayer = ChooseClosestNodeToPosition(playerPosition, true).position;
             // If player has left since emerge started, then re-appear back to original position.
             if (!player.isInsideFactory){
                 creatureAnimator.speed = 0.7f;
@@ -468,7 +467,7 @@ namespace SCP106 {
             creatureAnimator.speed = 0.7f;
             creatureAnimator.SetTrigger("startEmerge");
             creatureSFX.PlayOneShot(emergeSFX);
-            agent.Warp(playerPosition);
+            agent.Warp(closestNodeToPlayer);
             agent.speed = 0;
             agent.enabled = false;
 

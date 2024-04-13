@@ -12,14 +12,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e80ae96b3eb9177eea5c8f9dadbcda1, type: 3}
   m_Name: SCP106TN
   m_EditorClassIdentifier: 
-  displayText: 'Item #: SCP-106
+  displayText: '[CONFIDENTIAL]
 
 
-    Object Class: Keter
+    SCP-106, also known as ''The Old Man'', is an
+    entity of unknown origin that constantly secretes a corrosive substance onto
+    anything it comes in contact with. It has been classified as level ''Keter''
+    by a previous and separate research organisation. The documents describing the
+    characteristics of SCP-106 indicate that it poses a serious threat to any and
+    all who find themselves near it''s vicinity.
 
 
-    After an expedition
-    to a newly discovered lab, only one crew member returned. '
+    These and other similar documents
+    from the aforementioned organisation were found left inside a ship that returned
+    without its crew on its deadline. Severe levels of corrosion were found scattered
+    around the inside of the ship which had fused some of these documents to the
+    ground. The reinforced blast doors showed the highest signs of deterioration.
+    Forensic samples among these spots of corrosion showed signs of organic matter
+    that matched those from the vessel''s missing crew.
+
+
+    After a thorough investigation
+    using simulations based on the documents found inside, it is thought that the
+    entity SCP-106 got inside the ship through the doors while they were closed,
+    mere moments after the ship has started to departure.
+
+
+    The Company advice
+    all employees to exercise extreme caution and to immediately evacuate if ''The
+    Old Man'' is spotted. Going alone is strictly forbidden.'
   terminalEvent: 
   clearPreviousText: 1
   maxCharactersToType: 35
