@@ -153,27 +153,17 @@ namespace SCP106 {
         public override void DoAIInterval() {
             base.DoAIInterval();
             switch(currentBehaviourStateIndex){
-                case (int)State.IDLE:
-                    break;
                 case (int)State.SEARCHING:
                     StopChaseMusicIfNoOneNearbyAndLimitReached();
                     HuntIfPlayerIsInSight();
                     HuntLoneliestPlayer();
                     break;
 
-                case (int)State.SPOTTED:
-                    break;
-
                 case (int)State.HUNTING:
                     SearchIfPlayerIsTooFarAway();
                     break;
 
-                case (int)State.KILLING:
-                    break;
-                case (int)State.EMERGING:
-                    break;
                 default:
-                    LogIfDebugBuild("Went to inexistent state!");
                     break;
             }
             SyncPositionToClients();
@@ -192,7 +182,6 @@ namespace SCP106 {
             }
             bool isCloseEnoughToHear = FoundClosestPlayerInRange(30f,30f);
             if (!isCloseEnoughToHear) {
-                //chaseSource.Stop();
                 PlaySFXServerRpc((int)SFX.Chasing, false);
                 PlaySFXServerRpc((int)SFX.Breathing, false);
             }
@@ -436,6 +425,11 @@ namespace SCP106 {
             }
         }
 
+        /*
+            [EMERGE]
+            SCP sinks into the ground and then rises from a node near the player (and behind them).
+            SCP then chases this player by default.
+        */
         [ServerRpc(RequireOwnership = false)]
         public void StartEmergeSequenceServerRpc(int playerClientId) {
             StartEmergeSequenceClientRpc(playerClientId);
@@ -655,23 +649,6 @@ namespace SCP106 {
         }
 
 /* * [KILLING ANIMATIONS END] * */
-
-        /*
-            Called when a Player hits / attacks SCP-106
-        */
-        /*public override void HitEnemy(int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false) {
-            base.HitEnemy(force, playerWhoHit, playHitSFX);
-            if(isEnemyDead){
-                return;
-            }
-            enemyHP -= force;
-            if (IsOwner) {
-                if (enemyHP <= 0 && !isEnemyDead) {
-                    StopCoroutine(searchCoroutine);
-                    KillEnemyOnOwnerClient();
-                }
-            }
-        }*/
 
 /* * [RPC FUNCTIONS START] * */
 
