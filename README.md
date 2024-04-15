@@ -8,6 +8,7 @@ Adds a new enemy inspired by *SCP: Containment Breach* to Lethal Company. This A
 
 ### Damage related
 >! Grabs & Kill players he comes in contact with.
+>! Player can be saved if SCP is stunned.
 
 ### Behaviour
 >! Detects noise, and will investigate source of noise.
@@ -18,9 +19,6 @@ Adds a new enemy inspired by *SCP: Containment Breach* to Lethal Company. This A
 ### Walk through doors
 - SCP-106 should, similar to in Containment Breach, be able to pass through solid objects such as doors without having to open them.
 - Possible configuration option to allow locked doors & blast doors.
-
-### Stunning SCP-106 during a kill animation saves the player being killed.
-- Should work for the general kill animation (Grabbing the player).
 
 ### Allow SCP-106 to leave the factory
 - Add a config option so that SCP also becomes an outside enemy.
