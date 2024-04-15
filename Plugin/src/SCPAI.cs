@@ -32,12 +32,14 @@ namespace SCP106 {
         public ParticleSystem creatureVFX;
 
         private Coroutine killCoroutine;
+        private Coroutine faceCoroutine;
 
         public bool lookAtPlayer = false;
         public bool KillingPlayer = false;
 
         #pragma warning restore 0649
         float timeSinceHittingLocalPlayer = 0;
+        float timeSinceHitByPlayer = 0;
         float timeSinceSpottedPlayer = 60;
         float timeSinceHeardNoise = 15;
         float timeSinceHuntStart = 0;
@@ -45,6 +47,9 @@ namespace SCP106 {
         readonly float spottedSFXCooldown = 60; // Cooldown in Seconds between doing the surprised "Spotted" sequence
         readonly float chaseMusicLimit = 5; // Play chase music for 60 seconds, then check if we can turn it off (only if no one nearby)
         readonly float emergeCooldown = 120; // After this many seconds of not seeing a player, emerge near the loneliest one.
+
+        private float targetPlayerMovementSpeed; // Restore original movement speed for target player (e.g. after stunned during kill animation)
+        private float targetPlayerJumpForce;
 
         public enum State { // SCP Creature States
             IDLE,
@@ -75,7 +80,7 @@ namespace SCP106 {
 
         [Conditional("DEBUG")]
         void LogIfDebugBuild(string text) {
-            //Plugin.Logger.LogInfo(text);
+            Plugin.Logger.LogInfo(text);
         }
 
         /*
@@ -99,14 +104,21 @@ namespace SCP106 {
         public void InitSCPValuesClientRpc() {
             // Setup the default values, e.g. config values
             creatureAnimator.SetTrigger("startStill");
-            StartCoroutine(SpawnDelay());
+            StartCoroutine(DelayAndStateClient(3f, (int)State.SEARCHING));
         }
 
-        // To prevent a Weird bug when a player looks at SCP right as he spawns.
-        private IEnumerator SpawnDelay() {
-            yield return new WaitForSeconds(3f);
-            SwitchToBehaviourClientRpc((int)State.SEARCHING);
-            DoAnimationClientRpc((int)State.SEARCHING);
+        // Waits for specified time and then changes to specified state.
+        private IEnumerator DelayAndStateServer(float timeToWait, int newStateInt) {
+            yield return new WaitForSeconds(timeToWait);
+            SwitchToBehaviourServerRpc(newStateInt);
+            DoAnimationServerRpc(newStateInt);
+        }
+
+        // Waits for specified time and then changes to specified state.
+        private IEnumerator DelayAndStateClient(float timeToWait, int newStateInt) {
+            yield return new WaitForSeconds(timeToWait);
+            SwitchToBehaviourClientRpc(newStateInt);
+            DoAnimationClientRpc(newStateInt);
         }
 
         /*
@@ -116,8 +128,9 @@ namespace SCP106 {
             base.Update();
             timeSinceHittingLocalPlayer += Time.deltaTime;
             timeSinceSpottedPlayer += Time.deltaTime;
-            timeSinceHuntStart += Time.deltaTime;
+            timeSinceHitByPlayer += Time.deltaTime;
             timeSinceHeardNoise += Time.deltaTime;
+            timeSinceHuntStart += Time.deltaTime;
         }
 
         public void LateUpdate() {
@@ -502,13 +515,60 @@ namespace SCP106 {
             }
         }
 
+        /*
+            [ANY]
+            Do stuff if hit by an enemy. Result can differ by state, such as if killing a player or hunting another.
+        */
+        public override void HitEnemy(int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false, int hitID = -1)
+        {
+            base.HitEnemy(force, playerWhoHit, playHitSFX, hitID);
+            // If currently killing & haven't been hit too recently, let player survive
+            if (currentBehaviourStateIndex == (int)State.KILLING && timeSinceHitByPlayer > 10f){
+                try
+                {
+                    inSpecialAnimation = false;
+                    KillingPlayer = false;
+                    creatureVFX.Stop();
+                    // Stop the coroutines
+                    StopCoroutine(killCoroutine);
+                    StopCoroutine(faceCoroutine);
+                    // Cut off the scream
+                    PlaySFXClientRpc((int)SFX.Killing,false);
+                    LogIfDebugBuild("Stopping routine!");
+                    RestoreTargetPlayerValues(); // Let the player move again
+                    StartCoroutine(DelayAndStateClient(3f, (int)State.HUNTING)); // Let SCP wait a few seconds before hunting again
+                    ChangeTargetPlayerClientRpc((int)playerWhoHit.playerClientId); // Hunt player who hit SCP-106
+                }
+                catch (System.Exception)
+                {
+                    throw;
+                }
+            }
+            // Else, be stunned for a few seconds before hunting whoever hit SCP-106. 
+            else {
+                StartCoroutine(DelayAndStateClient(3f, (int)State.HUNTING));
+                ChangeTargetPlayerClientRpc((int)playerWhoHit.playerClientId);
+            }
+            timeSinceHitByPlayer = 0f;
+        }
+
+        /* [KILLING]
+            If stunned while killing a player, restore that player's config values, e.g. so they can move and jump again.
+        */
+        public void RestoreTargetPlayerValues() {
+            inSpecialAnimationWithPlayer.movementSpeed = targetPlayerMovementSpeed;
+            inSpecialAnimationWithPlayer.jumpForce = targetPlayerJumpForce;
+            inSpecialAnimationWithPlayer.disableSyncInAnimation = false;
+            inSpecialAnimationWithPlayer.disableLookInput = false;
+            inSpecialAnimationWithPlayer.gameplayCamera.transform.position = inSpecialAnimationWithPlayer.cameraContainerTransform.position;
+        }
+
 /* * [PLAYER RELATED FUNCTIONS END] * */
 
 /* * [KILLING ANIMATIONS START] * */
 
         /*
             SCP forces targetPlayer to face them, enters into an animation and then kills the player.
-            TODO: Allow to be interrupted by hitting SCP, saving the player
         */
         [ServerRpc(RequireOwnership = false)]
         public void GrabAndKillPlayerServerRpc(int playerClientId) {
@@ -532,10 +592,11 @@ namespace SCP106 {
             PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
             if (!KillingPlayer && !player.isPlayerDead){
                 // Restore variables
-                float playerMovementSpeed = inSpecialAnimationWithPlayer.movementSpeed;
-                float playerJumpForce = inSpecialAnimationWithPlayer.jumpForce;
+                targetPlayerMovementSpeed = inSpecialAnimationWithPlayer.movementSpeed;
+                targetPlayerJumpForce = inSpecialAnimationWithPlayer.jumpForce;
 
                 // Player Model Manipulation
+                inSpecialAnimationWithPlayer.DiscardHeldObject();
                 inSpecialAnimationWithPlayer.disableSyncInAnimation = true;
                 inSpecialAnimationWithPlayer.disableLookInput = true;
                 inSpecialAnimationWithPlayer.movementSpeed = 0;
@@ -543,7 +604,7 @@ namespace SCP106 {
                 inSpecialAnimationWithPlayer.Crouch(false);
                 Vector3 oldPlayerPosition = inSpecialAnimationWithPlayer.gameObject.transform.position;
                 inSpecialAnimationWithPlayer.gameObject.transform.position = new Vector3(oldPlayerPosition.x,base.transform.position.y,oldPlayerPosition.z);
-                Coroutine faceCoroutine = StartCoroutine(MakePlayerFaceSCP(playerClientId));
+                faceCoroutine = StartCoroutine(MakePlayerFaceSCP(playerClientId));
 
                 // SCP Object Manipulation
                 KillingPlayer = true;
@@ -576,10 +637,7 @@ namespace SCP106 {
                 PlaySFXClientRpc((int)SFX.Laughing);
 
                 // Return state Player
-                inSpecialAnimationWithPlayer.movementSpeed = playerMovementSpeed;
-                inSpecialAnimationWithPlayer.jumpForce = playerJumpForce;
-                inSpecialAnimationWithPlayer.disableSyncInAnimation = false;
-                inSpecialAnimationWithPlayer.disableLookInput = false;
+                RestoreTargetPlayerValues();
 
                 // Wait a little before continuing
                 creatureAnimator.SetTrigger("startStill");
@@ -705,10 +763,15 @@ namespace SCP106 {
                     }
                     break;
                 case (int)SFX.Killing:
-                    //AudioClip killSFX = killingSounds[Random.Range(0,killingSounds.Length)];
-                    AudioClip killSFX = killingSounds[1];
-                    creatureSFX.volume = 1f;
-                    creatureSFX.PlayOneShot(killSFX);
+                    if (play){
+                        AudioClip killSFX = killingSounds[1];
+                        creatureSFX.volume = 1f;
+                        creatureSFX.PlayOneShot(killSFX);
+                    } else {
+                        if (creatureSFX.isPlaying){
+                            creatureSFX.Stop(true);
+                        }
+                    }
                     break;
                 case (int)SFX.PlayerKilled:
                     AudioClip playerSFX = playerKilledSounds[Random.Range(0,playerKilledSounds.Length)];
