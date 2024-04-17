@@ -56,6 +56,14 @@ namespace SCP106 {
         private float targetPlayerMovementSpeed; // Restore original movement speed for target player (e.g. after stunned during kill animation)
         private float targetPlayerJumpForce;
 
+        private System.Random rnd = new();
+
+        // Configuration settings
+
+        private int chanceToPush = 15;
+        private bool canGoOutside = false;
+        private bool canGoInsideShip = false;
+
         public enum State { // SCP Creature States
             IDLE,
             SEARCHING,
@@ -541,8 +549,13 @@ namespace SCP106 {
             PlayerControllerB playerControllerB = MeetsStandardPlayerCollisionConditions(other);
             if (playerControllerB != null && !playerControllerB.isPlayerDead)
             {
-                //PushPlayerServerRpc((int)playerControllerB.playerClientId);
-                GrabAndKillPlayerServerRpc((int)playerControllerB.playerClientId);
+                int roll = rnd.Next(0,100);
+                if (roll < 15){
+                    PushPlayerServerRpc((int)playerControllerB.playerClientId);
+                }
+                else {
+                    GrabAndKillPlayerServerRpc((int)playerControllerB.playerClientId);
+                }
                 timeSinceHittingLocalPlayer = 0f;
             }
         }
@@ -724,17 +737,26 @@ namespace SCP106 {
             StartCoroutine(SmoothPushPlayer(playerClientId));
         }
 
+        /*
+            Pushes the player down on the ground.
+        */
         private IEnumerator SmoothPushPlayer(int playerClientId) {
+            LogIfDebugBuild("Pushing Player!");
             PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
-            Vector3 scpDirection = transform.forward * 6f;
-            Vector3 playerStartPosition = player.gameObject.transform.position;
-            Vector3 newPlayerPosition = playerStartPosition + scpDirection;
-            for (int i = 0; i < 24; i++){
-                player.gameObject.transform.position = Vector3.Lerp(playerStartPosition, newPlayerPosition, Time.deltaTime * 5f);
+            float distance = 3f;
+            Vector3 scpDirection = transform.forward * distance;
+            agent.speed = 0f;
+            creatureAnimator.SetTrigger("startStill");
+            creatureAnimator.speed = 1f;
+            PlaySFXClientRpc((int)SFX.Laughing);
+            player.SpawnPlayerAnimation();
+            for (int i = 0; i < 12; i++){
+                player.thisController.Move(scpDirection * 1/12);
                 yield return null;
             }
-            agent.speed = 0f;
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(3f);
+            creatureAnimator.SetTrigger("startWalk");
+            creatureAnimator.speed = 3f;
             agent.speed = 3f;
         }
 
