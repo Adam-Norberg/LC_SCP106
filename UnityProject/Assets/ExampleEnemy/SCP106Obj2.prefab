@@ -2055,7 +2055,7 @@ NavMeshAgent:
   m_AutoRepath: 1
   m_Height: 2
   m_BaseOffset: 0
-  m_WalkableMask: 4294967295
+  m_WalkableMask: 105
   m_ObstacleAvoidanceType: 4
 --- !u!114 &8191729791214908923
 MonoBehaviour:
@@ -3245,7 +3245,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2639188432512917958}
-  - component: {fileID: 2716338276214367506}
+  - component: {fileID: 8304036548941965824}
   - component: {fileID: 2104327719688392216}
   - component: {fileID: 6374841746584905634}
   m_Layer: 19
@@ -3270,7 +3270,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 4753110319141955858}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2716338276214367506
+--- !u!114 &8304036548941965824
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3279,7 +3279,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8819465046361800686}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6d7127b8f98ca8ec9896b384a71d39a2, type: 3}
+  m_Script: {fileID: 436502282, guid: e38b45bfd3e86ea43b35084057a8cbbc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   mainScript: {fileID: 4029903581189531850}

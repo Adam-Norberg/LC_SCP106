@@ -2,8 +2,10 @@ using System.Collections;
 using System.Diagnostics;
 using System.Linq;
 using GameNetcodeStuff;
+using HarmonyLib;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.UIElements;
 
 namespace SCP106 {
@@ -13,6 +15,7 @@ namespace SCP106 {
         // We set these in our Asset Bundle, so we can disable warning CS0649:
         // Field 'field' is never assigned to, and will always have its default value 'value'
         #pragma warning disable 0649
+
         public Transform boneHead; // Head object reference of the model
         public Transform boneNeck; // Neck object reference
         public Transform turnReference; // Invisible object pointing towards player, as reference to smoothly track head & neck
@@ -29,7 +32,8 @@ namespace SCP106 {
         public AudioClip sinkSFX;
         public AudioClip emergeSFX;
 
-        public ParticleSystem creatureVFX;
+        public ParticleSystem creatureVFX; // "Puke" / Corrosion VFX
+        private GameObject[] doors = []; // All doors on the map (inside & outside).
 
         private Coroutine killCoroutine;
         private Coroutine faceCoroutine;
@@ -38,6 +42,7 @@ namespace SCP106 {
         public bool KillingPlayer = false;
 
         #pragma warning restore 0649
+
         float timeSinceHittingLocalPlayer = 0;
         float timeSinceHitByPlayer = 0;
         float timeSinceSpottedPlayer = 60;
@@ -90,6 +95,8 @@ namespace SCP106 {
             base.Start();
             LogIfDebugBuild("SCP-106 has Spawned");
 
+            FindAndIgnoreAllDoors();
+
             InitSCPValuesServerRpc();
             timeSinceHittingLocalPlayer = 0;
             timeSinceHeardNoise = 15;
@@ -119,6 +126,21 @@ namespace SCP106 {
             yield return new WaitForSeconds(timeToWait);
             SwitchToBehaviourClientRpc(newStateInt);
             DoAnimationClientRpc(newStateInt);
+        }
+
+        /*
+            Gets and saves all gameobjects with component "DoorLock".
+            When <HUNTING> a player, SCP will ignore locked doors (Normal & Big).
+            Needed since AI will find alternate path around these normally, but here we animate him phasing through it.
+            TODO: If investigating source behind locked door, he should phase through that too.
+        */
+        private void FindAndIgnoreAllDoors() {
+            LogIfDebugBuild("Ignoring all doors!");
+            openDoorSpeedMultiplier = 0;
+            DoorLock[] allDoors = UnityEngine.Object.FindObjectsOfType<DoorLock>();
+            foreach(DoorLock door in allDoors){
+                doors.AddItem<GameObject>(door.gameObject);
+            }
         }
 
         /*
@@ -293,8 +315,19 @@ namespace SCP106 {
                 DoAnimationServerRpc((int)State.SEARCHING);
                 return;
             }
+
+            // Default Hunting Behaviour
             SetDestinationToPosition(targetPlayer.transform.position, checkForPath: false);
         }
+
+        private IEnumerator PhaseThroughDoor(GameObject door) {
+            creatureAnimator.SetTrigger("startWalk");
+            creatureAnimator.speed = 0.5f;
+            agent.speed = 0.5f;
+            yield return null;
+        }
+
+
 
         /*
             [SEARCHING]
@@ -412,7 +445,6 @@ namespace SCP106 {
             if(checkPlayer == null) return false;
             return true;
         }
-
         /*
             [SEARCHING -> EMERGE]
             Sets the TargetPlayer to the player who is furthest away from the other players.
