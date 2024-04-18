@@ -27,13 +27,13 @@ namespace SCP106
                 NavMeshObstacle
         */
         public void OnTriggerEnter(Collider other){
-            if(other.gameObject.layer == 9){
+            /*if(other.gameObject.layer == 9){
                 LogIfDebugBuild("LOCKING DOOR");
                 DoorLock doorLock = other.gameObject.GetComponent<DoorLock>();
                 NavMeshObstacle obstacle = doorLock.GetComponent<NavMeshObstacle>();
                 doorLock.isLocked = true;
                 obstacle.carving = true;
-            }
+            }*/
         }
     }
 }

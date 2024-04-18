@@ -43,15 +43,17 @@ namespace SCP106 {
 
         #pragma warning restore 0649
 
+        // TODO: use timestamps instead of counting (for optimization)
         float timeSinceHittingLocalPlayer = 0;
         float timeSinceHitByPlayer = 0;
         float timeSinceSpottedPlayer = 60;
         float timeSinceHeardNoise = 15;
         float timeSinceHuntStart = 0;
+        float timeAtLastExit = 35;
 
         readonly float spottedSFXCooldown = 60; // Cooldown in Seconds between doing the surprised "Spotted" sequence
         readonly float chaseMusicLimit = 5; // Play chase music for 60 seconds, then check if we can turn it off (only if no one nearby)
-        readonly float emergeCooldown = 120; // After this many seconds of not seeing a player, emerge near the loneliest one.
+        readonly float emergeCooldown = 5; // After this many seconds of not seeing a player, emerge near the loneliest one.
 
         private float targetPlayerMovementSpeed; // Restore original movement speed for target player (e.g. after stunned during kill animation)
         private float targetPlayerJumpForce;
@@ -59,8 +61,7 @@ namespace SCP106 {
         private System.Random rnd = new();
 
         // Configuration settings
-
-        private int chanceToPush = 15;
+        private int nonDeadlyInteractions = 15; // Chance to push, etc
         private bool canGoOutside = false;
         private bool canGoInsideShip = false;
 
@@ -104,20 +105,28 @@ namespace SCP106 {
             LogIfDebugBuild("SCP-106 has Spawned");
 
             FindAndIgnoreAllDoors();
-
-            InitSCPValuesServerRpc();
-            timeSinceHittingLocalPlayer = 0;
-            timeSinceHeardNoise = 15;
+            if (IsHost){
+                InitSCPValuesServerRpc();
+            }
         }
 
-        [ServerRpc(RequireOwnership = false)]
+        [ServerRpc]
         public void InitSCPValuesServerRpc() {
-            InitSCPValuesClientRpc();
+            int deadly = Plugin.BoundConfig.NonDeadlyInteractions.Value;
+            bool outside = Plugin.BoundConfig.CanGoOutside.Value;
+            bool ship = Plugin.BoundConfig.CanGoInsideShip.Value;
+            InitSCPValuesClientRpc(deadly,outside,ship);
         }
 
         [ClientRpc]
-        public void InitSCPValuesClientRpc() {
+        public void InitSCPValuesClientRpc(int deadly, bool outside, bool ship) {
             // Setup the default values, e.g. config values
+            nonDeadlyInteractions = deadly;
+            canGoOutside = outside;
+            canGoInsideShip = ship;
+            agent.areaMask = NavMesh.AllAreas;
+
+            // Start spawn animation
             creatureAnimator.SetTrigger("startStill");
             StartCoroutine(DelayAndStateClient(3f, (int)State.SEARCHING));
         }
@@ -197,6 +206,7 @@ namespace SCP106 {
             base.DoAIInterval();
             switch(currentBehaviourStateIndex){
                 case (int)State.SEARCHING:
+                    ExitEnterFacility();
                     StopChaseMusicIfNoOneNearbyAndLimitReached();
                     HuntIfPlayerIsInSight();
                     HuntLoneliestPlayer();
@@ -315,7 +325,9 @@ namespace SCP106 {
                 DoAnimationServerRpc((int)State.SEARCHING);
                 return;
             }
-            if(!targetPlayer.isInsideFactory){
+            if(!targetPlayer.isInsideFactory && !isOutside || 
+                targetPlayer.isInsideFactory && isOutside || 
+                targetPlayer.isInHangarShipRoom && !canGoInsideShip){
                 LogIfDebugBuild("Searching State");
                 ChangeTargetPlayerServerRpc(-1);
                 StopSearch(currentSearch);
@@ -335,7 +347,62 @@ namespace SCP106 {
             yield return null;
         }
 
+        /*
+            [SEARCHING]
+            Only works if CanGoOutside is True.
+            Call with True to Enter facility, False to Exit.
+            Called if SCP hasn't seen a player in some time, or if hunting a player.
+        */
+        private void ExitEnterFacility() {
+            if(!canGoOutside){
+                //LogIfDebugBuild($"Can Go outside is false!");
+                return;
+            }
+            if (Time.realtimeSinceStartup - timeAtLastExit < 3f){
+                //LogIfDebugBuild($"Not allowed to exit yet!");
+                return;
+            }
 
+            Vector3 mainDoorPosition = RoundManager.FindMainEntrancePosition(true,isOutside);
+            float distanceFromDoor = Vector3.Distance(transform.position,mainDoorPosition);
+            if (GetClosestPlayer() && PathIsIntersectedByLineOfSight(mainDoorPosition,false,false)){
+                //LogIfDebugBuild($"Can't enter/leave yet");
+                return;
+            }
+            // Try to Enter Facility
+            if(distanceFromDoor < 1f){
+                Vector3 otherDoor = RoundManager.FindMainEntrancePosition(true, !isOutside);
+                Vector3 newPos = RoundManager.Instance.GetNavMeshPosition(otherDoor);
+                TeleportSCPServerRpc(newPos, !isOutside);
+                return;
+            }
+            SetDestinationToPosition(mainDoorPosition);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void TeleportSCPServerRpc(Vector3 newPos, bool setOutside){
+            TeleportSCPClientRpc(newPos, setOutside);
+        }
+
+        [ClientRpc]
+        public void TeleportSCPClientRpc(Vector3 newPos, bool setOutside){
+            // Set variables
+            agent.enabled = false;
+            if (currentSearch.inProgress){
+                StopSearch(currentSearch);
+            }
+            transform.position = newPos;
+            agent.enabled = true;
+            timeAtLastExit = Time.realtimeSinceStartup;
+            SetEnemyOutside(setOutside);
+
+            // Play the audio sound
+            EntranceTeleport entranceTeleport = RoundManager.FindMainEntranceScript(setOutside);
+            if (entranceTeleport.doorAudios != null && entranceTeleport.doorAudios.Length != 0){
+                entranceTeleport.entrancePointAudio.PlayOneShot(entranceTeleport.doorAudios[0]);
+            }
+            StartSearch(transform.position);
+        }
 
         /*
             [SEARCHING]
@@ -467,14 +534,21 @@ namespace SCP106 {
             foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
             {
                 // Note: 'isPlayerAlone' only becomes true if 1. no one near them, 2. hears no one in WalkieTalkie, and 3. >1 player in lobby/game
-                if (player.isInsideFactory && (player.isPlayerAlone || StartOfRound.Instance.livingPlayers == 1)){
-                    LogIfDebugBuild("Warping to loneliest player");
-                    StopSearch(currentSearch);
-                    SwitchToBehaviourServerRpc((int)State.EMERGING);
-                    ChangeTargetPlayerServerRpc((int)player.playerClientId);
-                    StartEmergeSequenceServerRpc((int)player.playerClientId);
+                if (player.isInsideFactory == isOutside){
                     return;
                 }
+                if (!player.isPlayerAlone && StartOfRound.Instance.livingPlayers != 1){
+                    return;
+                }
+                if (player.isInHangarShipRoom && !canGoInsideShip){
+                    return;
+                }
+                LogIfDebugBuild("Warping to loneliest player");
+                StopSearch(currentSearch);
+                SwitchToBehaviourServerRpc((int)State.EMERGING);
+                ChangeTargetPlayerServerRpc((int)player.playerClientId);
+                StartEmergeSequenceServerRpc((int)player.playerClientId);
+                return;
             }
         }
 
@@ -504,8 +578,10 @@ namespace SCP106 {
             PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
             Vector3 playerPosition = player.transform.position;
             Vector3 closestNodeToPlayer = ChooseClosestNodeToPosition(playerPosition, true).position;
-            // If player has left since emerge started, then re-appear back to original position.
-            if (!player.isInsideFactory){
+            // If player leaves (and SCP not allowed to leave), then re-appear back to original position.
+            // Or, if enters ship and SCP not allowed to enter ship, - .. -
+            if (!player.isInsideFactory && !canGoOutside || player.isInHangarShipRoom && !canGoInsideShip){
+                LogIfDebugBuild("Player left factory / entered ship, stopping emerge");
                 creatureAnimator.speed = 0.7f;
                 creatureAnimator.SetTrigger("startEmerge");
                 creatureSFX.PlayOneShot(emergeSFX);
@@ -549,11 +625,13 @@ namespace SCP106 {
             PlayerControllerB playerControllerB = MeetsStandardPlayerCollisionConditions(other);
             if (playerControllerB != null && !playerControllerB.isPlayerDead)
             {
-                int roll = rnd.Next(0,100);
-                if (roll < 15){
+                int rollDeadly = rnd.Next(0,100);
+                // Check if SCP should harm/taunt or kill player.
+                if (rollDeadly < nonDeadlyInteractions){
                     PushPlayerServerRpc((int)playerControllerB.playerClientId);
                 }
                 else {
+                    // TODO: New kill animation if player is / is not looking @ SCP
                     GrabAndKillPlayerServerRpc((int)playerControllerB.playerClientId);
                 }
                 timeSinceHittingLocalPlayer = 0f;
@@ -641,7 +719,9 @@ namespace SCP106 {
                 targetPlayerJumpForce = inSpecialAnimationWithPlayer.jumpForce;
 
                 // Player Model Manipulation
-                inSpecialAnimationWithPlayer.DiscardHeldObject();
+                if(inSpecialAnimationWithPlayer.isHoldingObject){
+                    inSpecialAnimationWithPlayer.DiscardHeldObject();
+                }
                 inSpecialAnimationWithPlayer.disableSyncInAnimation = true;
                 inSpecialAnimationWithPlayer.disableLookInput = true;
                 inSpecialAnimationWithPlayer.movementSpeed = 0;
