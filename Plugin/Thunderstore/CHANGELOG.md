@@ -1,6 +1,7 @@
 ## 2.0.0
 - Stunnable
 - Can go outside (Config option)
+- Can enter ship (Config option)
 - Non-Deadly Interactions added
 
 ## 1.0.1
