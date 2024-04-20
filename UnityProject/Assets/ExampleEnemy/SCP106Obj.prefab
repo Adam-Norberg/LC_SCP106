@@ -7225,9 +7225,6 @@ MonoBehaviour:
   sinkSFX: {fileID: 8300000, guid: eba35433ecf2d034db71d3baeab31782, type: 3}
   emergeSFX: {fileID: 8300000, guid: 05b96055499019b4aa4703e33e84926b, type: 3}
   creatureVFX: {fileID: 442043254773340170}
-  scpMask: {fileID: 1338117830882028682, guid: 5d0f5a3d1ec3a594e8cb10b685682ac7, type: 3}
-  scpModel: {fileID: 0}
-  modelRenderer: {fileID: 0}
   lookAtPlayer: 0
   KillingPlayer: 0
 --- !u!4 &2272375401868457926 stripped

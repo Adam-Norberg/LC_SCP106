@@ -2186,7 +2186,7 @@ MonoBehaviour:
   isEnemyDead: 0
   daytimeEnemyLeaving: 0
   enemyHP: 4
-  openDoorSpeedMultiplier: 0
+  openDoorSpeedMultiplier: 1
   useSecondaryAudiosOnAnimatedObjects: 0
   currentSearch:
     unsearchedNodes: []
