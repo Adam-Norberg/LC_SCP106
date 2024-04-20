@@ -56,7 +56,7 @@ namespace SCP106 {
         float timeAtLastExit;
 
         readonly float spottedSFXCooldown = 60; // Cooldown in Seconds between doing the surprised "Spotted" sequence
-        readonly float chaseMusicLimit = 5; // Play chase music for 60 seconds, then check if we can turn it off (only if no one nearby)
+        readonly float chaseMusicLimit = 60; // Play chase music for 60 seconds, then check if we can turn it off (only if no one nearby)
         readonly float emergeCooldown = 120; // After this many seconds of not seeing a player, emerge near the loneliest one.
         readonly float emergeCooldownOutside = 240; // Same as above but for when outside, occurs left often by default to not incessently annoy people in ship
 
@@ -138,7 +138,7 @@ namespace SCP106 {
 
             timeAtHitByPlayer = Time.realtimeSinceStartup;
             timeAtLastExit = Time.realtimeSinceStartup;
-            timeAtHuntStart = Time.realtimeSinceStartup - 115;
+            timeAtHuntStart = Time.realtimeSinceStartup;
             timeAtLastSpotted = Time.realtimeSinceStartup - 60;
             timeAtLastNoiseHeard = Time.realtimeSinceStartup - 15;
             timeAtHittingPlayer = Time.realtimeSinceStartup;
