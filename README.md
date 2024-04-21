@@ -4,15 +4,29 @@ Adds a new enemy inspired by *SCP: Containment Breach* to Lethal Company. This A
 ## Abilities (spoilers)
 
 ### Characteristics
->! Unkillable.
+<details>
+  <summary>Spoiler warning</summary>
+    - Unkillable.
+    - Sadistic property, chance for non-instakillable interactions.
+  
+</details>
 
 ### Damage related
->! Grabs & Kill players he comes in contact with.
->! Player can be saved if SCP is stunned.
+<details>
+  <summary>Spoiler warning</summary>
+    - Grabs & Kill players he comes in contact with.
+    - Player can be saved if SCP is stunned.
+    - Has a chance to push players, damaging them slightly.
+  
+</details>
 
 ### Behaviour
->! Detects noise, and will investigate source of noise.
->! Emerges from behind the loneliest player if he hasn't seen someone for a certain amount of time.
+<details>
+  <summary>Spoiler warning</summary>
+    - Detects noise, and will investigate source of noise.
+    - Emerges from behind the loneliest player if he hasn't seen someone for a certain amount of time.
+  
+</details>
 
 ## TODO / Ideas
 
