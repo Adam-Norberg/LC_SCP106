@@ -2075,7 +2075,7 @@ MonoBehaviour:
   ActiveSceneSynchronization: 0
   SceneMigrationSynchronization: 1
   SpawnWithObservers: 1
-  DontDestroyWithOwner: 0
+  DontDestroyWithOwner: 1
   AutoObjectParentSync: 1
 --- !u!114 &4029903581189531850
 MonoBehaviour:
@@ -2210,6 +2210,8 @@ MonoBehaviour:
   stunnedByPlayer: {fileID: 0}
   debugEnemyAI: 0
   isOutside: 0
+  pocketdimension: {fileID: 3437561194564818240, guid: 1b9aef37b8b0e304b8f7d897730635f6,
+    type: 3}
   boneHead: {fileID: 5805488996458945335}
   boneNeck: {fileID: 7491356355985311289}
   turnReference: {fileID: 5076094835432759878}

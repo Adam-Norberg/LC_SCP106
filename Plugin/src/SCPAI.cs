@@ -20,6 +20,8 @@ namespace SCP106 {
         // Field 'field' is never assigned to, and will always have its default value 'value'
         #pragma warning disable 0649
 
+        public GameObject pocketdimension;
+
         public Transform boneHead; // Head object reference of the model
         public Transform boneNeck; // Neck object reference
         public Transform turnReference; // Invisible object pointing towards player, as reference to smoothly track head & neck
@@ -102,7 +104,7 @@ namespace SCP106 {
 
         [Conditional("DEBUG")]
         void LogIfDebugBuild(string text) {
-            //Plugin.Logger.LogInfo(text);
+            Plugin.Logger.LogInfo(text);
         }
 
         /*
@@ -124,6 +126,13 @@ namespace SCP106 {
             bool stun = Plugin.BoundConfig.Stunnable.Value;
             bool outside = Plugin.BoundConfig.CanGoOutside.Value;
             bool ship = Plugin.BoundConfig.CanGoInsideShip.Value;
+
+            // Pocket dimension
+            Vector3 spawnPos = base.transform.position;
+            //Vector3 spawnPos = RoundManager.FindMainEntrancePosition(true,true);
+            GameObject pd = Instantiate(pocketdimension,spawnPos,Quaternion.identity);
+            pd.GetComponent<NetworkObject>().Spawn();
+
             InitSCPValuesClientRpc(deadly,stun,outside,ship);
         }
 
@@ -678,6 +687,10 @@ namespace SCP106 {
                 return;
             }
             PlayerControllerB playerControllerB = MeetsStandardPlayerCollisionConditions(other);
+            playerControllerB.TeleportPlayer(pocketdimension.transform.position);
+            //playerControllerB.transform.position = pocketdimension.transform.position;
+
+            return;
             if (playerControllerB != null && !playerControllerB.isPlayerDead)
             {
                 int rollDeadly = rnd.Next(0,100);
