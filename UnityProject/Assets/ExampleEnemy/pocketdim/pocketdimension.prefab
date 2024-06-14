@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 8998919588695190649}
   - component: {fileID: 4951960503221626403}
   - component: {fileID: 4102065193887636751}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pddoorway (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -117,7 +117,7 @@ GameObject:
   - component: {fileID: 5575998610502565276}
   - component: {fileID: 1383963792147826414}
   - component: {fileID: 5058451839321542946}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pdwall (5)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -222,7 +222,7 @@ GameObject:
   - component: {fileID: 7227371037678670532}
   - component: {fileID: 8181037290414594252}
   - component: {fileID: 1698204906557260505}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pdwall (14)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -327,7 +327,7 @@ GameObject:
   - component: {fileID: 6571491165730690054}
   - component: {fileID: 7161635134916657295}
   - component: {fileID: 6725487329397185119}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pdwall (8)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -432,7 +432,7 @@ GameObject:
   - component: {fileID: 5889230346069634168}
   - component: {fileID: 2407728105033897845}
   - component: {fileID: 8360231692759379258}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pdwall (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -537,7 +537,7 @@ GameObject:
   - component: {fileID: 5396496245660690140}
   - component: {fileID: 688657330394155832}
   - component: {fileID: 1528481149647742653}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pddoorway1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -642,7 +642,7 @@ GameObject:
   - component: {fileID: 5302653808647481720}
   - component: {fileID: 6728763516244112811}
   - component: {fileID: 307308954317241284}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pddoorway (8)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -747,7 +747,7 @@ GameObject:
   - component: {fileID: 8446779035084955764}
   - component: {fileID: 1789765549496599360}
   - component: {fileID: 5950949852422502522}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pddoorway1 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -852,7 +852,7 @@ GameObject:
   - component: {fileID: 5745534175328682841}
   - component: {fileID: 4073688455331436202}
   - component: {fileID: 4023564286841213006}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pddoorway (5)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -957,7 +957,7 @@ GameObject:
   - component: {fileID: 5730487034274341315}
   - component: {fileID: 238327788449902376}
   - component: {fileID: 2011594877134642469}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pddoorway2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1062,7 +1062,7 @@ GameObject:
   - component: {fileID: 2893637517881918848}
   - component: {fileID: 8636433936416964509}
   - component: {fileID: 2350714644213206869}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pdwall (4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1167,7 +1167,7 @@ GameObject:
   - component: {fileID: 7287869250019329882}
   - component: {fileID: 856755890325517187}
   - component: {fileID: 2232546606724715037}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pddoorway3 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1272,7 +1272,7 @@ GameObject:
   - component: {fileID: 8755288234522515474}
   - component: {fileID: 7341809863314782811}
   - component: {fileID: 9143689203010728100}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pdwall (9)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1374,7 +1374,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 615678720490649800}
-  m_Layer: 13
+  m_Layer: 8
   m_Name: pdspawn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1408,7 +1408,7 @@ GameObject:
   - component: {fileID: 3887670073537753929}
   - component: {fileID: 7691123831296896193}
   - component: {fileID: 2602107537201171701}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: floor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1513,7 +1513,8 @@ GameObject:
   - component: {fileID: 8689264462735527955}
   - component: {fileID: 7362123432929587996}
   - component: {fileID: 5168536937051869785}
-  m_Layer: 11
+  - component: {fileID: 353759504649142431}
+  m_Layer: 8
   m_Name: pdfloor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1606,6 +1607,37 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &353759504649142431
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4751392076115098816}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_AgentTypeID: 0
+  m_CollectObjects: 0
+  m_Size: {x: 10, y: 10, z: 10}
+  m_Center: {x: 0, y: 2, z: 0}
+  m_LayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_UseGeometry: 0
+  m_DefaultArea: 0
+  m_GenerateLinks: 0
+  m_IgnoreNavMeshAgent: 1
+  m_IgnoreNavMeshObstacle: 1
+  m_OverrideTileSize: 0
+  m_TileSize: 256
+  m_OverrideVoxelSize: 0
+  m_VoxelSize: 0.16666667
+  m_MinRegionArea: 2
+  m_NavMeshData: {fileID: 23800000, guid: 779e1b75ead10774cbf51af5a3b44096, type: 2}
+  m_BuildHeightMesh: 0
 --- !u!1 &4973424093167755784
 GameObject:
   m_ObjectHideFlags: 0
@@ -1618,7 +1650,7 @@ GameObject:
   - component: {fileID: 1801539076745431412}
   - component: {fileID: 7702422929568405330}
   - component: {fileID: 8752148366851959010}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pdwall (15)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1723,7 +1755,7 @@ GameObject:
   - component: {fileID: 5969554891801380161}
   - component: {fileID: 9190952825676886366}
   - component: {fileID: 2587772813434485464}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pdwall (12)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1828,7 +1860,7 @@ GameObject:
   - component: {fileID: 3659991337526855268}
   - component: {fileID: 2307341800186968359}
   - component: {fileID: 1339607971177558730}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pdwall (7)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1931,7 +1963,7 @@ GameObject:
   m_Component:
   - component: {fileID: 248543611497476692}
   - component: {fileID: 8611163861614914849}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: pocketdimension
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2022,7 +2054,7 @@ GameObject:
   - component: {fileID: 1736572508905434216}
   - component: {fileID: 3179467084308926697}
   - component: {fileID: 7192801716177580083}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pddoorway (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2127,7 +2159,7 @@ GameObject:
   - component: {fileID: 7981606486866864757}
   - component: {fileID: 9126255531988234619}
   - component: {fileID: 7310506182463150330}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pddoorway2 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2232,7 +2264,7 @@ GameObject:
   - component: {fileID: 4475163108653347463}
   - component: {fileID: 1086654243925132853}
   - component: {fileID: 7200751872733315165}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pdwall (13)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2337,7 +2369,7 @@ GameObject:
   - component: {fileID: 7696977820271067363}
   - component: {fileID: 4547899598090711857}
   - component: {fileID: 5881833876395486256}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pddoorway (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2442,7 +2474,7 @@ GameObject:
   - component: {fileID: 3900594197175580526}
   - component: {fileID: 6407713173542684626}
   - component: {fileID: 3498805263193776993}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pdwall (11)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2547,7 +2579,7 @@ GameObject:
   - component: {fileID: 4089006049783046712}
   - component: {fileID: 5529294128063548476}
   - component: {fileID: 690178803794616031}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pdwall (6)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2652,7 +2684,7 @@ GameObject:
   - component: {fileID: 7545257526798648535}
   - component: {fileID: 5316644913527941618}
   - component: {fileID: 1353922024926756314}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pddoorway
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2757,7 +2789,7 @@ GameObject:
   - component: {fileID: 2003221665833243949}
   - component: {fileID: 1917995665923317055}
   - component: {fileID: 1248360170957692364}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pddoorway (6)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2862,7 +2894,7 @@ GameObject:
   - component: {fileID: 3614322661139023619}
   - component: {fileID: 2684631030873323718}
   - component: {fileID: 1392784161107528358}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pddoorway (4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2967,7 +2999,7 @@ GameObject:
   - component: {fileID: 1699560097293704009}
   - component: {fileID: 2820033424468841032}
   - component: {fileID: 9180408196588033259}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pdwall (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3072,7 +3104,7 @@ GameObject:
   - component: {fileID: 6499768977223377520}
   - component: {fileID: 8493353484665408602}
   - component: {fileID: 6463271022643104996}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pdwall (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3177,7 +3209,7 @@ GameObject:
   - component: {fileID: 8182316601437834791}
   - component: {fileID: 5901511511119455196}
   - component: {fileID: 3484724726556573815}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pddoorway (9)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3282,7 +3314,7 @@ GameObject:
   - component: {fileID: 5935258742354293314}
   - component: {fileID: 689689085406532016}
   - component: {fileID: 996394188671769062}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pddoorway3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3387,7 +3419,7 @@ GameObject:
   - component: {fileID: 1094566407853343881}
   - component: {fileID: 6764122128385892511}
   - component: {fileID: 7891670327223845292}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pdfloor (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3492,7 +3524,7 @@ GameObject:
   - component: {fileID: 2915296567174817721}
   - component: {fileID: 5349005505907126245}
   - component: {fileID: 6372946955026826981}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pddoorway (7)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3597,7 +3629,7 @@ GameObject:
   - component: {fileID: 6896614681777966897}
   - component: {fileID: 259314443796149362}
   - component: {fileID: 2975582104885920055}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pdwall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3702,7 +3734,7 @@ GameObject:
   - component: {fileID: 5587324794924598917}
   - component: {fileID: 5107258067496976472}
   - component: {fileID: 3829000256672755197}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: pdwall (10)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3876,7 +3908,7 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 13f2a42ac08271047a96114e42b15853,
         type: 3}
       propertyPath: m_Layer
-      value: 11
+      value: 8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

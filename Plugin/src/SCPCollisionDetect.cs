@@ -43,6 +43,9 @@ namespace SCP106
                     MeshRenderer
                     BoxCollider
                     Rigidbody
+            
+            Layer 4: Water (Maybe use for avoiding hazards?)
+            Layer 8: Triggers
         */
         public void OnTriggerEnter(Collider other){
             /*LogIfDebugBuild($"Layer: {other.gameObject.layer}, Type: {other.gameObject.tag}");

@@ -1983,7 +1983,7 @@ GameObject:
   - component: {fileID: 4029903581189531850}
   m_Layer: 19
   m_Name: SCP106Obj2
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2210,7 +2210,7 @@ MonoBehaviour:
   stunnedByPlayer: {fileID: 0}
   debugEnemyAI: 0
   isOutside: 0
-  pocketdimension: {fileID: 3437561194564818240, guid: 1b9aef37b8b0e304b8f7d897730635f6,
+  pocketdimension: {fileID: 5499161855436384226, guid: 8186fecaa84b8e44f9e85a3ef769641a,
     type: 3}
   boneHead: {fileID: 5805488996458945335}
   boneNeck: {fileID: 7491356355985311289}

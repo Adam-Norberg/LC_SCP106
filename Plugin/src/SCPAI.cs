@@ -21,6 +21,7 @@ namespace SCP106 {
         #pragma warning disable 0649
 
         public GameObject pocketdimension;
+        private GameObject pocketd;
 
         public Transform boneHead; // Head object reference of the model
         public Transform boneNeck; // Neck object reference
@@ -130,8 +131,10 @@ namespace SCP106 {
             // Pocket dimension
             Vector3 spawnPos = base.transform.position;
             //Vector3 spawnPos = RoundManager.FindMainEntrancePosition(true,true);
-            GameObject pd = Instantiate(pocketdimension,spawnPos,Quaternion.identity);
-            pd.GetComponent<NetworkObject>().Spawn();
+            pocketd = Instantiate(pocketdimension,spawnPos - new Vector3(0,25,0),Quaternion.identity,base.transform);
+            pocketd.GetComponent<NetworkObject>().Spawn();
+            LogIfDebugBuild($"SCP Pos: {base.transform.position}, PD pos: {pocketd.transform.position}, PocketdimPrefab pos: {pocketdimension.transform.position}");
+            //DebugPrintAllObjects();
 
             InitSCPValuesClientRpc(deadly,stun,outside,ship);
         }
@@ -164,6 +167,15 @@ namespace SCP106 {
             // Start spawn animation
             creatureAnimator.SetTrigger("startStill");
             StartCoroutine(DelayAndStateClient(3f, (int)State.SEARCHING));
+        }
+
+        // DEBUG: Prints all objects on the level on spawn, with their tags.
+        private void DebugPrintAllObjects(){
+            LogIfDebugBuild("Printing all items");
+            IEnumerable<GameObject> objects = UnityEngine.Object.FindObjectsOfType<GameObject>();
+            foreach(GameObject obj in objects){
+                LogIfDebugBuild($"Layer: {obj.layer}, Tag: {obj.tag}, Name: {obj.name}");
+            }
         }
 
         // If called, SCP's AI navigation will avoid Hazards (quicksand, water)
@@ -687,8 +699,12 @@ namespace SCP106 {
                 return;
             }
             PlayerControllerB playerControllerB = MeetsStandardPlayerCollisionConditions(other);
-            playerControllerB.TeleportPlayer(pocketdimension.transform.position);
-            //playerControllerB.transform.position = pocketdimension.transform.position;
+            //base.transform.position = pocketdimension.transform.position + new Vector3(0,2,0);
+            Vector3 closePos = ChooseClosestNodeToPosition(pocketd.transform.position).position;
+            LogIfDebugBuild($"Teleport called, PD pos: {pocketd.transform.position}, Closest pos: {closePos}");
+            playerControllerB.TeleportPlayer(closePos);
+            //playerControllerB.transform.position = pocketdimension.transform.position + new Vector3(0,1,0);
+            //playerControllerB.TeleportPlayer(pocketdimension.transform.position);
 
             return;
             if (playerControllerB != null && !playerControllerB.isPlayerDead)
