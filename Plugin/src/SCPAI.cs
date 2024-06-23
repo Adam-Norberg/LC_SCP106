@@ -1042,7 +1042,23 @@ namespace SCP106 {
             }
         }
 /* * [RPC FUNCTIONS END] * */
-/* *  [INTERFACE FUNCTIONS START]  * */
+/* * [MISC FUNCTIONS START] * */
+
+        // Called when SCP wants to pass through a locked door
+        public void PassDoorStart(){
+            creatureSFX.PlayOneShot(sinkSFX);
+            creatureAnimator.speed = 0.7f;
+            agent.speed = 0.7f;
+        }
+        public void PassDoorEnd(){
+            if(currentBehaviourStateIndex == (int)State.HUNTING){
+                creatureAnimator.speed = 3f;
+                agent.speed = 3f;
+            }
+        }
+
+/* * [MISC FUNCTIONS END] * */
+/* * [INTERFACE FUNCTIONS START] * */
 
         public int GetThreatLevel(Vector3 seenByPosition)
         {

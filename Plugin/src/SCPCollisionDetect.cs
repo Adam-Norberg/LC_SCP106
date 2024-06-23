@@ -7,13 +7,16 @@ namespace SCP106
 {
     class SCPCollisionDetect : EnemyAICollisionDetect
     {
+        private SCPAI scpAI;
+        private GameObject currentDoorPassing;
+
         [Conditional("DEBUG")]
         void LogIfDebugBuild(string text) {
             Plugin.Logger.LogInfo(text);
         }
 
         public void Start() {
-            
+            scpAI = GetComponentInParent<SCPAI>();
         }
 
         /*
@@ -45,6 +48,16 @@ namespace SCP106
                     Rigidbody
         */
         public void OnTriggerEnter(Collider other){
+            // Pass through locked door
+            if(other.gameObject.layer == 9){
+                DoorLock doorLock = other.gameObject.GetComponent<DoorLock>();
+                if(doorLock != null && scpAI.currentBehaviourStateIndex == (int)SCPAI.State.HUNTING){
+                    currentDoorPassing = other.gameObject;
+                    doorLock.OpenDoorAsEnemyServerRpc();
+                    scpAI.PassDoorStart();
+                }
+            }
+            // Debugging below
             /*LogIfDebugBuild($"Layer: {other.gameObject.layer}, Type: {other.gameObject.tag}");
             Component[] comp = other.gameObject.GetComponents<Component>();
             foreach(var c in comp){
@@ -57,6 +70,11 @@ namespace SCP106
                 doorLock.isLocked = true;
                 obstacle.carving = true;
             }*/
+        }
+        public void OnTriggerExit(Collider other){
+            if(other.gameObject == currentDoorPassing){
+                scpAI.PassDoorEnd();
+            }
         }
     }
 }
