@@ -1,15 +1,15 @@
 ManifestFileVersion: 0
-CRC: 1474434030
+CRC: 1278368816
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: 2fa162fc84c07b9431d8270c8dd45dce
+    Hash: 1ae611c030c0997988a13330e88c96ae
   TypeTreeHash:
     serializedVersion: 2
-    Hash: a6ee85c27503162d170fd8c3ed8794cf
+    Hash: 579ceed79338cd003451ecf5ce972e1a
   IncrementalBuildHash:
     serializedVersion: 2
-    Hash: 2fa162fc84c07b9431d8270c8dd45dce
+    Hash: 1ae611c030c0997988a13330e88c96ae
 HashAppended: 0
 ClassTypes:
 - Class: 1
@@ -44,8 +44,12 @@ ClassTypes:
   Script: {instanceID: 0}
 - Class: 95
   Script: {instanceID: 0}
+- Class: 108
+  Script: {instanceID: 0}
 - Class: 114
   Script: {fileID: 11500000, guid: 65d3fcb39dd67306e9bb17a603308070, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 7a68c43fe1f2a47cfa234b5eeaa98012, type: 3}
 - Class: 114
   Script: {fileID: 11500000, guid: 04f75356a7e9c978bddc7d568e58a50b, type: 3}
 - Class: 114
@@ -62,9 +66,15 @@ ClassTypes:
   Script: {fileID: 369096387, guid: e38b45bfd3e86ea43b35084057a8cbbc, type: 3}
 - Class: 114
   Script: {fileID: 436502282, guid: e38b45bfd3e86ea43b35084057a8cbbc, type: 3}
+- Class: 114
+  Script: {fileID: -995675138, guid: e38b45bfd3e86ea43b35084057a8cbbc, type: 3}
+- Class: 114
+  Script: {fileID: -448165019, guid: e38b45bfd3e86ea43b35084057a8cbbc, type: 3}
 - Class: 115
   Script: {instanceID: 0}
 - Class: 137
+  Script: {instanceID: 0}
+- Class: 167
   Script: {instanceID: 0}
 - Class: 195
   Script: {instanceID: 0}
@@ -79,6 +89,10 @@ SerializeReferenceClassIdentifiers:
   ClassName: AISearchRoutine
 - AssemblyName: Assembly-CSharp
   ClassName: EnemyBehaviourState
+- AssemblyName: Unity.RenderPipelines.HighDefinition.Runtime
+  ClassName: UnityEngine.Rendering.HighDefinition.BoolScalableSettingValue
+- AssemblyName: Unity.RenderPipelines.HighDefinition.Runtime
+  ClassName: UnityEngine.Rendering.HighDefinition.IntScalableSettingValue
 Assets:
 - Assets/ExampleEnemy/Bestiary/SCP106TN.asset
 - Assets/ExampleEnemy/Bestiary/SCP106TK.asset

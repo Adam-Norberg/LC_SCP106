@@ -131,9 +131,11 @@ namespace SCP106 {
             // Pocket dimension
             Vector3 spawnPos = base.transform.position;
             //Vector3 spawnPos = RoundManager.FindMainEntrancePosition(true,true);
-            pocketd = Instantiate(pocketdimension,spawnPos - new Vector3(0,25,0),Quaternion.identity,base.transform);
+            pocketd = Instantiate(pocketdimension,spawnPos - new Vector3(0,200,0),Quaternion.identity,base.transform);
             pocketd.GetComponent<NetworkObject>().Spawn();
             LogIfDebugBuild($"SCP Pos: {base.transform.position}, PD pos: {pocketd.transform.position}, PocketdimPrefab pos: {pocketdimension.transform.position}");
+            GetClosestPlayer().TeleportPlayer(pocketd.transform.position);
+            
             //DebugPrintAllObjects();
 
             InitSCPValuesClientRpc(deadly,stun,outside,ship);
@@ -702,7 +704,7 @@ namespace SCP106 {
             //base.transform.position = pocketdimension.transform.position + new Vector3(0,2,0);
             Vector3 closePos = ChooseClosestNodeToPosition(pocketd.transform.position).position;
             LogIfDebugBuild($"Teleport called, PD pos: {pocketd.transform.position}, Closest pos: {closePos}");
-            playerControllerB.TeleportPlayer(closePos);
+            playerControllerB.TeleportPlayer(pocketd.transform.position);
             //playerControllerB.transform.position = pocketdimension.transform.position + new Vector3(0,1,0);
             //playerControllerB.TeleportPlayer(pocketdimension.transform.position);
 
