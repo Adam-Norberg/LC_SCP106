@@ -102,7 +102,7 @@ namespace SCP106 {
 
         [Conditional("DEBUG")]
         void LogIfDebugBuild(string text) {
-            //Plugin.Logger.LogInfo(text);
+            Plugin.Logger.LogInfo(text);
         }
 
         /*
@@ -855,10 +855,13 @@ namespace SCP106 {
         public IEnumerator MakePlayerFaceSCP(int playerClientId) {
             LogIfDebugBuild("Make Player Face SCP Called");
             PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
+            LogIfDebugBuild($"Player FOV: {player.gameplayCamera.fieldOfView}");
             Vector3 myDirection = base.transform.position - player.gameObject.transform.position;
             while (player.health != 0){
                 player.gameObject.transform.rotation = Quaternion.Lerp(player.gameObject.transform.rotation, Quaternion.LookRotation(myDirection), Time.deltaTime *5f);
                 player.gameplayCamera.transform.position = Vector3.Lerp(player.gameplayCamera.transform.position,turnReference.position, Time.deltaTime *0.4f);
+                player.gameplayCamera.fieldOfView -= 1.5f;
+                player.gameplayCamera.transform.localPosition = UnityEngine.Random.insideUnitSphere * 0.7f * Time.deltaTime;
                 yield return null;
             }
         }
