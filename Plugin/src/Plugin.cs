@@ -5,6 +5,8 @@ using LethalLib.Modules;
 using BepInEx.Logging;
 using System.IO;
 using SCP106.Configuration;
+using System.Collections.Generic;
+using System;
 
 namespace SCP106 {
     [BepInPlugin(ModGUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -45,9 +47,47 @@ namespace SCP106 {
             // Network Prefabs need to be registered. See https://docs-multiplayer.unity3d.com/netcode/current/basics/object-spawning/
             // LethalLib registers prefabs on GameNetworkManager.Start.
             NetworkPrefabs.RegisterNetworkPrefab(SCP106.enemyPrefab);
-			Enemies.RegisterEnemy(SCP106, BoundConfig.SpawnWeight.Value, Levels.LevelTypes.All, Enemies.SpawnType.Default, SCP106TN, SCP106TK);
+
+            // Spawn Weight by Level
+            (Dictionary<Levels.LevelTypes, int> spawnRateByLevelType, Dictionary<string, int> spawnRateByCustomLevelType) = GetSpawnRarities(BoundConfig.SpawnWeight.Value);
+
+            // Check if the spawn rate parsed correctly. If failed, default to spawn rate 25.
+            if (spawnRateByLevelType != null && spawnRateByCustomLevelType != null){
+			    Enemies.RegisterEnemy(SCP106, Enemies.SpawnType.Default, spawnRateByLevelType, spawnRateByCustomLevelType, SCP106TN, SCP106TK);
+                Logger.LogInfo($"SCP Spawn rates: {spawnRateByLevelType} and {spawnRateByCustomLevelType} registered!");
+            } else{
+                Enemies.RegisterEnemy(SCP106,25,Levels.LevelTypes.All,Enemies.SpawnType.Default,SCP106TN,SCP106TK);
+            }
             
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+        }
+
+        // Input config is of the format "LevelName:Value;"
+        private (Dictionary<Levels.LevelTypes, int> levelRarities, Dictionary<string, int> customLevelRarities) GetSpawnRarities(string config){
+            Dictionary<Levels.LevelTypes, int> levelRare = [];
+            Dictionary<string, int> customRare = [];
+            string[] moonAndWeights = config.Split(';');
+            foreach (string item in moonAndWeights)
+            {
+                try{
+                    string[] splitItem = item.Split(':');
+                    string moon = splitItem[0];
+                    string weight = splitItem[1];
+                    // Check if it's a standard level
+                    if(Enum.TryParse<Levels.LevelTypes>(moon, true, out Levels.LevelTypes levelType)){
+                        // Set weight to given integer. If not parseable, set to 0.
+                        levelRare[levelType] = int.TryParse(weight, out int spawnRate) ? spawnRate : 25;
+                    }
+                    // Else, add as custom
+                    else{
+                        customRare[moon] = int.TryParse(weight, out int spawnRate) ? spawnRate : 25;
+                    }
+                }catch{
+                    return (null,null);
+                }
+            }
+
+            return (levelRare,customRare);
         }
 
         private static void InitializeNetworkBehaviours() {

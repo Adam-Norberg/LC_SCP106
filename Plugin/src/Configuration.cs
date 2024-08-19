@@ -7,7 +7,7 @@ namespace SCP106.Configuration {
     public class PluginConfig
     {
         // For more info on custom configs, see https://lethal.wiki/dev/intermediate/custom-configs
-        public ConfigEntry<int> SpawnWeight;
+        public ConfigEntry<string> SpawnWeight;
         public ConfigEntry<bool> Stunnable;
         public ConfigEntry<int> NonDeadlyInteractions;
         public ConfigEntry<bool> CanGoOutside;
@@ -15,9 +15,10 @@ namespace SCP106.Configuration {
 
         public PluginConfig(BaseUnityPlugin plugin)
         {
-            SpawnWeight = plugin.Config.Bind("SCP-106", "SpawnWeight", 25,
-                "The spawn chance weight for SCP-106, relative to other existing enemies.\n" +
-                "Goes up from 0, lower is more rare, 100 and up is very common.");
+            SpawnWeight = plugin.Config.Bind("SCP-106", "SpawnWeight", "All:25",
+                "The spawn chance weights for SCP-106 per moon, relative to other existing enemies.\n" +
+                "Goes up from 0, lower is more rare, 100 and up is very common.\n" + 
+                "Specify Moon and Weight similar to 'VowLevel:25;TitanLevel:40;...;EmbrionLevel:35'");
 
             Stunnable = plugin.Config.Bind("SCP-106", "Stunnable", true,
                 "Toggles if SCP-106 can be stunned or not. Does not apply for Stun-Gun yet.");

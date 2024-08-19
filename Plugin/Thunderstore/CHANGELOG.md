@@ -1,3 +1,6 @@
+## 2.0.1
+- Per-Planet spawn rate configuration added
+
 ## 2.0.0
 - Blunt objects have been found useful in aiding crewmates in the event of direct contact with SCP-106.
 - SCP-106 has been reported exiting facilities located within the Company's area of operations.
