@@ -860,7 +860,7 @@ namespace SCP106 {
             while (player.health != 0){
                 player.gameObject.transform.rotation = Quaternion.Lerp(player.gameObject.transform.rotation, Quaternion.LookRotation(myDirection), Time.deltaTime *5f);
                 player.gameplayCamera.transform.position = Vector3.Lerp(player.gameplayCamera.transform.position,turnReference.position, Time.deltaTime *0.4f);
-                player.gameplayCamera.fieldOfView -= 1.5f;
+                player.gameplayCamera.fieldOfView -= 1f;
                 player.gameplayCamera.transform.localPosition = UnityEngine.Random.insideUnitSphere * 0.7f * Time.deltaTime;
                 yield return null;
             }
