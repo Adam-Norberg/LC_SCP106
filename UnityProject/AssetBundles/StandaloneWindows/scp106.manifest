@@ -1,15 +1,15 @@
 ManifestFileVersion: 0
-CRC: 1278368816
+CRC: 3228248157
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: 1ae611c030c0997988a13330e88c96ae
+    Hash: e63f1220072718636d2ded82d7f5ef85
   TypeTreeHash:
     serializedVersion: 2
-    Hash: 579ceed79338cd003451ecf5ce972e1a
+    Hash: 2650b66b8ec82081d9000104a2b05225
   IncrementalBuildHash:
     serializedVersion: 2
-    Hash: 1ae611c030c0997988a13330e88c96ae
+    Hash: e63f1220072718636d2ded82d7f5ef85
 HashAppended: 0
 ClassTypes:
 - Class: 1
@@ -63,13 +63,15 @@ ClassTypes:
 - Class: 114
   Script: {fileID: 11500000, guid: d3cecf05b78b173605122a700874719c, type: 3}
 - Class: 114
-  Script: {fileID: 369096387, guid: e38b45bfd3e86ea43b35084057a8cbbc, type: 3}
-- Class: 114
-  Script: {fileID: 436502282, guid: e38b45bfd3e86ea43b35084057a8cbbc, type: 3}
+  Script: {fileID: -1850115285, guid: e38b45bfd3e86ea43b35084057a8cbbc, type: 3}
 - Class: 114
   Script: {fileID: -995675138, guid: e38b45bfd3e86ea43b35084057a8cbbc, type: 3}
 - Class: 114
   Script: {fileID: -448165019, guid: e38b45bfd3e86ea43b35084057a8cbbc, type: 3}
+- Class: 114
+  Script: {fileID: 369096387, guid: e38b45bfd3e86ea43b35084057a8cbbc, type: 3}
+- Class: 114
+  Script: {fileID: 436502282, guid: e38b45bfd3e86ea43b35084057a8cbbc, type: 3}
 - Class: 115
   Script: {instanceID: 0}
 - Class: 137
@@ -96,5 +98,7 @@ SerializeReferenceClassIdentifiers:
 Assets:
 - Assets/ExampleEnemy/Bestiary/SCP106TN.asset
 - Assets/ExampleEnemy/Bestiary/SCP106TK.asset
+- Assets/ExampleEnemy/pocketdim/pocketdimension.prefab
 - Assets/ExampleEnemy/SCP106.asset
+- Assets/ExampleEnemy/pocketdim/pdPersonalAudio.prefab
 Dependencies: []

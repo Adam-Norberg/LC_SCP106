@@ -5,6 +5,7 @@ using LethalLib.Modules;
 using BepInEx.Logging;
 using System.IO;
 using SCP106.Configuration;
+using System;
 
 namespace SCP106 {
     [BepInPlugin(ModGUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -41,10 +42,14 @@ namespace SCP106 {
             var SCP106 = ModAssets.LoadAsset<EnemyType>("SCP106");
             var SCP106TN = ModAssets.LoadAsset<TerminalNode>("SCP106TN");
             var SCP106TK = ModAssets.LoadAsset<TerminalKeyword>("SCP106TK");
+            var PocketDimension = (GameObject)ModAssets.LoadAsset("pocketdimension");
+            var personalAudio = (GameObject)ModAssets.LoadAsset("pdPersonalAudio");
             
             // Network Prefabs need to be registered. See https://docs-multiplayer.unity3d.com/netcode/current/basics/object-spawning/
             // LethalLib registers prefabs on GameNetworkManager.Start.
             NetworkPrefabs.RegisterNetworkPrefab(SCP106.enemyPrefab);
+            NetworkPrefabs.RegisterNetworkPrefab(PocketDimension);
+            NetworkPrefabs.RegisterNetworkPrefab(personalAudio);
 			Enemies.RegisterEnemy(SCP106, BoundConfig.SpawnWeight.Value, Levels.LevelTypes.All, Enemies.SpawnType.Default, SCP106TN, SCP106TK);
             
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");

@@ -1,21 +1,21 @@
 using System.Diagnostics;
 using GameNetcodeStuff;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace SCP106{
 
     // Plays Sounds within the Pocket Dimension.
     // Before playing a sound it moves to a random location.
-    class PocketDimSounds : EnemyAICollisionDetect{
+    class PocketDimSounds : MonoBehaviour{
 
         public AudioSource soundSource; // AudioSource
         public AudioClip[] sounds;
-        public BoxCollider bounds; // The bounds which this Audio Source can move around in
-        private PlayerControllerB playerToFollow;
+        public Transform[] soundPositions; // Empty gameObjects where the sound can be played from
         private System.Random random;
         private float timeSinceSound = 0f;
         private float soundTimeLimit = 15f;
-        private Vector3 boundsPosition;
+        private int previousSound = 0;
         private int soundLength = 0;
 
         [Conditional("DEBUG")]
@@ -24,22 +24,34 @@ namespace SCP106{
         }
 
         public void Start(){
-            LogIfDebugBuild("Player entered PocketDimension!");
-            boundsPosition = bounds.transform.position + bounds.center;
             soundLength = sounds.Length;
             random = new();
         }
 
         public void Update(){
-            timeSinceSound += Time.deltaTime;
             // Play sound
-            if (timeSinceSound>=soundTimeLimit){
-                Vector3 randomVector = new Vector3(random.Next(-15,15),random.Next(-5,5),random.Next(-15,15));
-                this.transform.position = bounds.bounds.ClosestPoint(randomVector + boundsPosition);
-                
-                soundSource.PlayOneShot(sounds[random.Next(0,soundLength)]);
-                timeSinceSound = 0;
+            if (RoundManager.Instance.IsHost){
+                timeSinceSound += Time.deltaTime;
+                if(timeSinceSound>=soundTimeLimit){
+                    PlaySoundServerRpc();
+                }
             }
+        }
+
+        [ServerRpc]
+        public void PlaySoundServerRpc() {
+            int clipIndex = random.Next(0,soundLength);
+            if (clipIndex == previousSound) clipIndex += 1 % soundLength;
+            int positionIndex = random.Next(0,soundPositions.Length);
+            
+            PlaySoundClientRpc(clipIndex,positionIndex);
+        }
+        [ClientRpc]
+        public void PlaySoundClientRpc(int clipIndex, int positionIndex) {
+            this.transform.position = soundPositions[positionIndex].position;
+            LogIfDebugBuild($"SoundPos: {transform.position}");
+            soundSource.PlayOneShot(sounds[clipIndex]);
+            timeSinceSound = 0f;
         }
     }
 }

@@ -20,8 +20,9 @@ namespace SCP106 {
         // Field 'field' is never assigned to, and will always have its default value 'value'
         #pragma warning disable 0649
 
-        public GameObject pocketdimension;
-        private GameObject pocketd;
+        public GameObject pocketdimension; // Pocket Dimension Prefab
+        private GameObject pocketd; // Pocket Dimension Spawned
+        private PocketDimController pdController; // Pocket Dimension Controller
 
         public Transform boneHead; // Head object reference of the model
         public Transform boneNeck; // Neck object reference
@@ -130,13 +131,10 @@ namespace SCP106 {
 
             // Pocket dimension
             Vector3 spawnPos = base.transform.position;
-            //Vector3 spawnPos = RoundManager.FindMainEntrancePosition(true,true);
-            pocketd = Instantiate(pocketdimension,spawnPos - new Vector3(0,200,0),Quaternion.identity,base.transform);
-            pocketd.GetComponent<NetworkObject>().Spawn();
-            LogIfDebugBuild($"SCP Pos: {base.transform.position}, PD pos: {pocketd.transform.position}, PocketdimPrefab pos: {pocketdimension.transform.position}");
-            GetClosestPlayer().TeleportPlayer(pocketd.transform.position);
-            
-            //DebugPrintAllObjects();
+
+            this.pocketd = Instantiate(pocketdimension,spawnPos - new Vector3(0,600,0),Quaternion.identity,base.transform);
+            pocketd.GetComponent<NetworkObject>().Spawn(); // Spawns Pocket dimension for all players.
+            this.pdController = pocketd.GetComponentInChildren<PocketDimController>().RegisterSCP(this,pocketd.transform);
 
             InitSCPValuesClientRpc(deadly,stun,outside,ship);
         }
@@ -156,6 +154,7 @@ namespace SCP106 {
             timeAtLastSpotted = Time.realtimeSinceStartup - 60;
             timeAtLastNoiseHeard = Time.realtimeSinceStartup - 15;
             timeAtHittingPlayer = Time.realtimeSinceStartup;
+            
             // Define where SCP can walk
             agent.areaMask = NavMesh.AllAreas;
             if(!ship){
@@ -701,12 +700,8 @@ namespace SCP106 {
                 return;
             }
             PlayerControllerB playerControllerB = MeetsStandardPlayerCollisionConditions(other);
-            //base.transform.position = pocketdimension.transform.position + new Vector3(0,2,0);
-            Vector3 closePos = ChooseClosestNodeToPosition(pocketd.transform.position).position;
-            LogIfDebugBuild($"Teleport called, PD pos: {pocketd.transform.position}, Closest pos: {closePos}");
-            playerControllerB.TeleportPlayer(pocketd.transform.position);
-            //playerControllerB.transform.position = pocketdimension.transform.position + new Vector3(0,1,0);
-            //playerControllerB.TeleportPlayer(pocketdimension.transform.position);
+
+            SendPlayerToPocketDimensionServerRpc((int)playerControllerB.playerClientId);
 
             return;
             if (playerControllerB != null && !playerControllerB.isPlayerDead)
@@ -784,6 +779,19 @@ namespace SCP106 {
             inSpecialAnimationWithPlayer.disableSyncInAnimation = false;
             inSpecialAnimationWithPlayer.disableLookInput = false;
             inSpecialAnimationWithPlayer.gameplayCamera.transform.position = inSpecialAnimationWithPlayer.cameraContainerTransform.position;
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void SendPlayerToPocketDimensionServerRpc(int playerClientId){
+            pdController.PlayerEnterPocketDimensionServerRpc(playerClientId);
+            //SendPlayerToPocketDimensionClientRpc(playerClientId);
+        }
+
+        [ClientRpc]
+        public void SendPlayerToPocketDimensionClientRpc(int playerClientId){
+            //PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
+            //player.TeleportPlayer(new(x,y,z));
+            //pdController.SendPlayerToPocketDimension(playerClientId);
         }
 
 /* * [PLAYER RELATED FUNCTIONS END] * */
@@ -931,7 +939,7 @@ namespace SCP106 {
             yield return new WaitForSeconds(0.2f);
             PlaySFXClientRpc((int)SFX.Laughing);
             player.SpawnPlayerAnimation();
-            player.DamagePlayer(5);
+            player.DamagePlayer(25);
             for (int i = 0; i < 12; i++){
                 player.thisController.Move(scpDirection * 1/12);
                 yield return null;
