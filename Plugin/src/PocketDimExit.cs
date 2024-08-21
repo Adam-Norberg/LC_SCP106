@@ -1,10 +1,11 @@
 using System.Collections;
 using System.Diagnostics;
 using GameNetcodeStuff;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace SCP106{
-    class PocketDimExit : MonoBehaviour{
+    class PocketDimExit : NetworkBehaviour{
 
         public Transform pocketDimCentre; // The center of the Pocket Dimension (pdspawn)
         public PocketDimController pdController;
@@ -16,31 +17,37 @@ namespace SCP106{
             Plugin.Logger.LogInfo(text);
         }
 
+        public void Awake(){
+            LogIfDebugBuild($"PocketDimExit Awake!");
+        }
+
         public void Start(){
 
         }
 
         private void OnTriggerEnter(Collider other){
             if (other.tag == "Player"){
-                PlayerControllerB player = other.GetComponent<PlayerControllerB>();
-                int escapeChance = random.Next(1,9); // 1 to 8
-                // 3 in 8 chance to escape
-                if (escapeChance<=0){
-                    LogIfDebugBuild("Rolled less than 4, player escaped!");
-                    // Play "Escaped Sound"
-                    pdController.PlayerExit((int)player.playerClientId,PocketDimController.ExitStyle.ESCAPED);
-                }
-                // 3 in 8 chance for another attempt
-                else if (escapeChance<=0){
-                    player.SpawnPlayerAnimation();
-                    
-                    LogIfDebugBuild("Rolled more than 3 less than 7, player gets new attempt!");
-                    other.transform.position = pocketDimCentre.position;
-                }
-                // 2 in 8 chance to be killed
-                else {
-                    pdController.DeathStyleSlam((int)player.playerClientId,crushCollider);
-                }
+                RollForExitServerRpc((int)other.GetComponent<PlayerControllerB>().playerClientId);
+            }
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void RollForExitServerRpc(int playerClientId){
+            LogIfDebugBuild("PDE: Called RollForExitServerRpc");
+            PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
+            int escapeChance = random.Next(1,9); // 1 to 8
+            // 3 in 8 chance to escape
+            if (escapeChance<=0){
+                pdController.PlayerExit((int)player.playerClientId,PocketDimController.ExitStyle.ESCAPED);
+            }
+            // 3 in 8 chance for another attempt
+            else if (escapeChance<=0){
+                player.SpawnPlayerAnimation();
+                player.gameObject.transform.position = pocketDimCentre.position;
+            }
+            // 2 in 8 chance to be killed
+            else {
+                pdController.PlayerDeathServerRpc((int)player.playerClientId,(int)PocketDimController.DeathStyle.SLAM,crushCollider.position);
             }
         }
 

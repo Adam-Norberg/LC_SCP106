@@ -117,7 +117,7 @@ namespace SCP106 {
             LogIfDebugBuild("SCP-106 has breached containment.");
 
             //FindAndIgnoreAllDoors();
-            if (IsHost){
+            if (IsHost || IsServer){
                 InitSCPValuesServerRpc();
             }
         }
@@ -134,7 +134,8 @@ namespace SCP106 {
 
             this.pocketd = Instantiate(pocketdimension,spawnPos - new Vector3(0,600,0),Quaternion.identity,base.transform);
             pocketd.GetComponent<NetworkObject>().Spawn(); // Spawns Pocket dimension for all players.
-            this.pdController = pocketd.GetComponentInChildren<PocketDimController>().RegisterSCP(this,pocketd.transform);
+            this.pdController = pocketd.GetComponentInChildren<PocketDimController>();
+            this.pdController.RegisterSCPServerRpc(pocketd.transform.position);
 
             InitSCPValuesClientRpc(deadly,stun,outside,ship);
         }
@@ -699,21 +700,28 @@ namespace SCP106 {
             if (Time.realtimeSinceStartup - timeAtHittingPlayer < 1f) {
                 return;
             }
-            PlayerControllerB playerControllerB = MeetsStandardPlayerCollisionConditions(other);
+            //PlayerControllerB collidedPlayer = MeetsStandardPlayerCollisionConditions(other);
+            PlayerControllerB collidedPlayer = other.GetComponent<PlayerControllerB>();
+            if (this.inSpecialAnimationWithPlayer != null){
+                if (collidedPlayer.playerClientId == inSpecialAnimationWithPlayer.playerClientId){
+                    return;
+                }
+                this.inSpecialAnimationWithPlayer = collidedPlayer;
+            }
 
-            SendPlayerToPocketDimensionServerRpc((int)playerControllerB.playerClientId);
+            SendPlayerToPocketDimensionServerRpc((int)collidedPlayer.playerClientId);
 
             return;
-            if (playerControllerB != null && !playerControllerB.isPlayerDead)
+            if (collidedPlayer != null && !collidedPlayer.isPlayerDead)
             {
                 int rollDeadly = rnd.Next(0,100);
                 // Check if SCP should harm/taunt or kill player.
                 if (rollDeadly < nonDeadlyInteractions){
-                    PushPlayerServerRpc((int)playerControllerB.playerClientId);
+                    PushPlayerServerRpc((int)collidedPlayer.playerClientId);
                 }
                 else {
                     // TODO: New kill animation if player is / is not looking @ SCP
-                    GrabAndKillPlayerServerRpc((int)playerControllerB.playerClientId);
+                    GrabAndKillPlayerServerRpc((int)collidedPlayer.playerClientId);
                 }
                 timeAtHittingPlayer = Time.realtimeSinceStartup;
             }
@@ -783,15 +791,8 @@ namespace SCP106 {
 
         [ServerRpc(RequireOwnership = false)]
         public void SendPlayerToPocketDimensionServerRpc(int playerClientId){
+            LogIfDebugBuild($"Player {NetworkManager.LocalClientId} is in SendPlayerToPocketDimensionServerRpc!");
             pdController.PlayerEnterPocketDimensionServerRpc(playerClientId);
-            //SendPlayerToPocketDimensionClientRpc(playerClientId);
-        }
-
-        [ClientRpc]
-        public void SendPlayerToPocketDimensionClientRpc(int playerClientId){
-            //PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
-            //player.TeleportPlayer(new(x,y,z));
-            //pdController.SendPlayerToPocketDimension(playerClientId);
         }
 
 /* * [PLAYER RELATED FUNCTIONS END] * */
