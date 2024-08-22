@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace SCP106{
     class PocketDimExit : NetworkBehaviour{
-
+        #pragma warning disable 0649
         public Transform pocketDimCentre; // The center of the Pocket Dimension (pdspawn)
         public PocketDimController pdController;
         public Transform crushCollider; // For Teleport Death 1 (DeathStyle Slam)
@@ -27,27 +27,29 @@ namespace SCP106{
 
         private void OnTriggerEnter(Collider other){
             if (other.tag == "Player"){
-                RollForExitServerRpc((int)other.GetComponent<PlayerControllerB>().playerClientId);
+                PlayerControllerB player = other.GetComponent<PlayerControllerB>();
+                if(player.playerClientId == NetworkManager.LocalClientId){
+                    RollForExit(player);
+                }
             }
         }
 
-        [ServerRpc(RequireOwnership = false)]
-        public void RollForExitServerRpc(int playerClientId){
-            LogIfDebugBuild("PDE: Called RollForExitServerRpc");
-            PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
+        //[ServerRpc(RequireOwnership = false)]
+        public void RollForExit(PlayerControllerB player){
+            //PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
             int escapeChance = random.Next(1,9); // 1 to 8
             // 3 in 8 chance to escape
-            if (escapeChance<=0){
-                pdController.PlayerExit((int)player.playerClientId,PocketDimController.ExitStyle.ESCAPED);
+            if (escapeChance<=3){
+                pdController.PlayerExitServerRpc((int)player.playerClientId,(int)PocketDimController.ExitStyle.ESCAPED);
             }
             // 3 in 8 chance for another attempt
-            else if (escapeChance<=0){
+            else if (escapeChance<=6){
                 player.SpawnPlayerAnimation();
-                player.gameObject.transform.position = pocketDimCentre.position;
+                player.TeleportPlayer(pocketDimCentre.position);
             }
             // 2 in 8 chance to be killed
             else {
-                pdController.PlayerDeathServerRpc((int)player.playerClientId,(int)PocketDimController.DeathStyle.SLAM,crushCollider.position);
+                pdController.DeathStyleSlamClientRpc((int)player.playerClientId,crushCollider.position);
             }
         }
 

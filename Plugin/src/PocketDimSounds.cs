@@ -8,7 +8,7 @@ namespace SCP106{
     // Plays Sounds within the Pocket Dimension.
     // Before playing a sound it moves to a random location.
     class PocketDimSounds : NetworkBehaviour{
-
+        #pragma warning disable 0649
         public AudioSource soundSource; // AudioSource
         public AudioClip[] sounds;
         public Transform[] soundPositions; // Empty gameObjects where the sound can be played from
@@ -23,7 +23,7 @@ namespace SCP106{
         }
 
         public void Awake(){
-
+            soundSource.dopplerLevel=4;
         }
 
         public void Start(){
@@ -51,7 +51,7 @@ namespace SCP106{
         [ClientRpc]
         public void PlaySoundClientRpc(int clipIndex, int positionIndex) {
             this.transform.position = soundPositions[positionIndex].position;
-            LogIfDebugBuild($"SoundPos: {transform.position}");
+            //LogIfDebugBuild($"SoundPos: {transform.position}");
             soundSource.PlayOneShot(sounds[clipIndex]);
         }
     }

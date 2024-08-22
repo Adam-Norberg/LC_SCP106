@@ -2212,6 +2212,8 @@ MonoBehaviour:
   isOutside: 0
   pocketdimension: {fileID: 5499161855436384226, guid: 8186fecaa84b8e44f9e85a3ef769641a,
     type: 3}
+  corrosion: {fileID: 3512467851017815443, guid: 8a0b905c1ffc32b48800ad5056fa2a30,
+    type: 3}
   boneHead: {fileID: 5805488996458945335}
   boneNeck: {fileID: 7491356355985311289}
   turnReference: {fileID: 5076094835432759878}
@@ -2232,6 +2234,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 96cedd2d5e1129449b8dacfbb9867fed, type: 3}
   playerKilledSounds:
   - {fileID: 8300000, guid: a1bc650d4baa40747a3d3c779ab657d6, type: 3}
+  - {fileID: 8300000, guid: 10e9f616ed77990439fa8f9881f1021f, type: 3}
   sinkSFX: {fileID: 8300000, guid: eba35433ecf2d034db71d3baeab31782, type: 3}
   emergeSFX: {fileID: 8300000, guid: 05b96055499019b4aa4703e33e84926b, type: 3}
   creatureVFX: {fileID: 7329597996225039312}

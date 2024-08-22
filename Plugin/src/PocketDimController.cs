@@ -8,18 +8,18 @@ using UnityEngine;
 namespace SCP106{
 
     class PocketDimController : NetworkBehaviour{
-
+        #pragma warning disable 0649
         // Clips to be played per-player (breathing, death sounds, ...)
         public AudioClip[] personalAudioBreathing; // [breath0gas.ogg, ]
         public AudioClip[] personalAudioDeath;  // [Damage1.ogg, Damage2.ogg, Damage3.ogg, Damage5.ogg]
-        public AudioClip[] personalAudioEnter; // []
-        public AudioClip[] personalAudioExit; // []
+        public AudioClip[] personalAudioEnter; // [Enter.ogg, ]
+        public AudioClip[] personalAudioExit; // [Exit.ogg, ]
 
         public GameObject personalAudioPrefab; // Audio Source per-player
-        private SCPAI scp106;
         private Vector3 pocketDimensionPosition;
-        private Coroutine[] playersInPD;
-        //private GameObject[] personalAudios;
+        private bool[] playerIsInPD;
+        private Coroutine localPlayerCoroutine;
+        private Vector3 localPlayerExitLocation;
         private AudioSource[] personalAudios;
 
         public enum ExitStyle{
@@ -32,13 +32,19 @@ namespace SCP106{
             BLEED,
         }
 
+        private enum AudioGroup{
+            BREATHING,
+            DEATH,
+            ENTER,
+            EXIT,
+        }
+
         [Conditional("DEBUG")]
         void LogIfDebugBuild(string text) {
             Plugin.Logger.LogInfo(text);
         }
 
         public void Awake(){
-            LogIfDebugBuild($"PocketDimController Awake!");
         }
         
         public void Start(){
@@ -48,140 +54,192 @@ namespace SCP106{
         [ServerRpc]
         public void RegisterSCPServerRpc(Vector3 pocketPosition){
             int numberOfPlayers = StartOfRound.Instance.allPlayerScripts.Length;
-
+            ulong[] networkObjects = new ulong[numberOfPlayers];
             // Creates a PersonalAudio for each player.
             for (int i=0; i < numberOfPlayers; i++){
                 PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[i];
+                // NOTE: Players fail to be added as parents here. Parenting is done in ClientRpc call.
                 GameObject playerAudio = Instantiate(personalAudioPrefab,player.cameraContainerTransform.position,Quaternion.identity,player.gameObject.transform);
-                playerAudio.GetComponent<NetworkObject>().Spawn();
+                NetworkObject networkObject = playerAudio.GetComponent<NetworkObject>();
+                networkObject.Spawn();
+                networkObject.DestroyWithScene = true;
+                networkObjects[i] = networkObject.NetworkObjectId;
             }
-
-            RegisterSCPClientRpc(numberOfPlayers,pocketPosition);
+            RegisterSCPClientRpc(numberOfPlayers,pocketPosition,networkObjects);
         }
 
         [ClientRpc]
-        public void RegisterSCPClientRpc(int numberOfPlayers,Vector3 pocketPosition){
-            this.pocketDimensionPosition = pocketPosition;
-            this.playersInPD = new Coroutine[numberOfPlayers];
-            //this.personalAudios = new GameObject[numberOfPlayers];
-            this.personalAudios = new AudioSource[numberOfPlayers];
-            for(int i = 0; i < numberOfPlayers; i++){
-                AudioSource s = StartOfRound.Instance.allPlayerScripts[i].gameObject.GetComponentInChildren<AudioSource>();
-                LogIfDebugBuild($"Player {i} Audio Name: {s.name}");
-            }
-        }
-
-        [ServerRpc]
-        public void PlayPersonalSoundServerRpc(int playerClientId, int clipIndex, int group){
-
-        }
-
-        // Called when a player enters the Pocket Dimension. Stops existing PD Coroutine and starts a new one.
-        [ServerRpc]
-        public void PlayerEnterPocketDimensionServerRpc(int playerClientId){
-            /*if (this.playersInPD[playerClientId] != null){
-                StopCoroutine(this.playersInPD[playerClientId]);
-            }*/
+        public void RegisterSCPClientRpc(int numberOfPlayers, Vector3 pocketPosition, ulong[] networkObjects){
             
-            /*if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer){
-                LogIfDebugBuild("PocketDimEnter I AM HOST!");
-                PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
-                GameObject playerAudio = Instantiate(personalAudioPrefab,player.cameraContainerTransform.position,Quaternion.identity,player.gameObject.transform);
-                playerAudio.GetComponent<NetworkObject>().Spawn();
-                this.personalAudios[playerClientId] = playerAudio;
-            }*/
-            if (this.playersInPD[playerClientId] != null){
-                return;
+            this.pocketDimensionPosition = pocketPosition;
+            this.playerIsInPD = new bool[numberOfPlayers];
+            this.personalAudios = new AudioSource[numberOfPlayers];
+            for(int i = 0; i < personalAudios.Length; i++){
+                NetworkObject networkObject = NetworkManager.Singleton.SpawnManager.SpawnedObjects[networkObjects[i]];
+                // Sets the correct player as parent for the new Audio Sources
+                networkObject.TrySetParent(StartOfRound.Instance.allPlayerScripts[i].transform,true);
+                this.personalAudios[i] = networkObject.GetComponent<AudioSource>();
             }
-            PlayerEnterPocketDimensionClientRpc(playerClientId);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void PlayPersonalSoundServerRpc(int playerClientId, int clipIndex, int group){
+            PlayPersonalSoundClientRpc(playerClientId, clipIndex, group);
         }
 
         [ClientRpc]
-        public void PlayerEnterPocketDimensionClientRpc(int playerClientId){
-            LogIfDebugBuild("PocketDimEnterEffectCalled");
-            Coroutine playerRoutine = StartCoroutine(PocketDimensionEffect(playerClientId));
-            // Add to Host's list of players running the PocketDimension Coroutine
-            if(IsHost){
-                this.playersInPD[playerClientId] = playerRoutine;
-                LogIfDebugBuild("PocketDimEnterEffectCalled and Host added Coroutine to List");
-            }
-        }
-
-        // Stops a player's Pocket Dimension Coroutine, for whatever reason (died, escaped, ...)
-        public void PlayerExit(int playerClientId, ExitStyle exitStyle){
-            PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
-            switch (exitStyle)
-            {
-                case ExitStyle.RESET: break;
-                case ExitStyle.ESCAPED: {
-                    player.drunkness = 5f;
-                    player.playerBodyAnimator.speed*=2;
-                    player.movementSpeed*=2;
-                    player.SpawnPlayerAnimation();
-                    personalAudios[playerClientId].GetComponent<AudioSource>().PlayOneShot(personalAudioExit[0]);
-                    player.gameObject.transform.position = RoundManager.FindMainEntrancePosition(true,false);
+        private void PlayPersonalSoundClientRpc(int playerClientId, int clipIndex, int group){
+            switch(group){
+                case (int)AudioGroup.BREATHING: {
+                    personalAudios[playerClientId].PlayOneShot(personalAudioBreathing[clipIndex]);
+                    break;
+                }
+                case (int)AudioGroup.DEATH: {
+                    personalAudios[playerClientId].PlayOneShot(personalAudioDeath[clipIndex]);
+                    break;
+                }
+                case (int)AudioGroup.ENTER: {
+                    personalAudios[playerClientId].PlayOneShot(personalAudioEnter[clipIndex]);
+                    break;
+                }
+                case (int)AudioGroup.EXIT: {
+                    personalAudios[playerClientId].PlayOneShot(personalAudioExit[clipIndex]);
                     break;
                 }
                 default: break;
             }
-            StopCoroutine(this.playersInPD[playerClientId]);
-            //Destroy(this.personalAudios[playerClientId]);
+        }
+
+        // Called when a player enters the Pocket Dimension.
+        [ServerRpc]
+        public void PlayerEnterPocketDimensionServerRpc(int playerClientId, Vector3 playerLocation){
+            if (playerIsInPD[playerClientId]){
+                return;
+            }
+            PlayerEnterPocketDimensionClientRpc(playerClientId,playerLocation);
+        }
+        
+        // Player Entering: [Starts Coroutine, set self to True in playerIsInPD]
+        // All Others: [Set Player Entering to True in playerIsInPD]
+        [ClientRpc]
+        public void PlayerEnterPocketDimensionClientRpc(int playerClientId, Vector3 playerLocation){
+            this.playerIsInPD[playerClientId] = true;
+            PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
+            LogIfDebugBuild($"Player movementspeed Original: {player.movementSpeed}");
+            player.playerBodyAnimator.speed/=3;
+            // Only affected player needs to run the Coroutine
+            if(playerClientId == (int)NetworkManager.Singleton.LocalClientId){
+                this.localPlayerExitLocation = playerLocation;
+                this.localPlayerCoroutine = StartCoroutine(PocketDimensionEffect(playerClientId));
+            }
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void PlayerExitServerRpc(int playerClientId, int exitStyle){
+            PlayerExitClientRpc(playerClientId,exitStyle);
+        }
+
+        // 
+        [ClientRpc]
+        public void PlayerExitClientRpc(int playerClientId, int exitStyle){
+            // For all Players
+            PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
+            this.playerIsInPD[playerClientId] = false;
+            player.playerBodyAnimator.speed = 1;
+            if(playerClientId != (int)NetworkManager.Singleton.LocalClientId){
+                return;
+            }
+
+            // Only Affected Player runs code below
+            StopCoroutine(this.localPlayerCoroutine);
+            switch (exitStyle)
+            {
+                case (int)ExitStyle.RESET: break;
+                case (int)ExitStyle.ESCAPED: {
+                    player.drunkness = 5f;
+                    player.playerBodyAnimator.speed = 1;
+                    player.movementSpeed = 4.6f;
+                    player.SpawnPlayerAnimation();
+                    //personalAudios[playerClientId].PlayOneShot(personalAudioExit[0]);
+                    PlayPersonalSoundServerRpc(playerClientId,0,(int)AudioGroup.EXIT);
+                    //Vector3 doorPos = RoundManager.FindMainEntrancePosition(true,false);
+                    player.TeleportPlayer(this.localPlayerExitLocation);
+                    break;
+                }
+                default: break;
+            }
         }
 
         // Limited time to escape Pocket Dimension, then the player dies.
         // Coroutine to move camera similar to SCP-CB Pocket Dimension
         public IEnumerator PocketDimensionEffect(int playerClientId){
-            LogIfDebugBuild("PocketDimensionEffect running");
-            float bleedoutTimer = 45f;
-            float timeSinceEntered = Time.realtimeSinceStartup;
+            float bleedoutTimer = 25f;
+            float timeSinceEntered = Time.realtimeSinceStartup; // StartOfRound.Instance.timeSinceRoundStarted
             PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
-        
-            //AudioSource personalAudio = personalAudios[playerClientId].GetComponent<AudioSource>();
             
-            //personalAudio.PlayOneShot(personalAudioEnter[0]);
-
+            //personalAudios[playerClientId].PlayOneShot(personalAudioEnter[0]);
+            PlayPersonalSoundServerRpc(playerClientId,0,(int)AudioGroup.ENTER);
             // Make the player drunk and slow
+            
             player.drunkness = 20f;
             player.drunknessInertia = 15f;
-            player.movementSpeed/=2;
-            player.playerBodyAnimator.speed/=2;
-            LogIfDebugBuild($"Player {NetworkManager.LocalClientId}: {playerClientId} has movementspeed value {player.movementSpeed}");
+            player.movementSpeed/=3;
+            player.playerBodyAnimator.speed/=3;
             player.TeleportPlayer(pocketDimensionPosition);
             player.SpawnPlayerAnimation();
-            player.DropBlood(new(0,-1,0),true,true);
+            player.DropBlood(default,true,true);
+            
 
             // Stay drunk for a while
-            while (!player.isPlayerDead && (Time.realtimeSinceStartup - timeSinceEntered < bleedoutTimer)){
+            while (!player.isPlayerDead && (Time.realtimeSinceStartup - timeSinceEntered < bleedoutTimer - 4)){
                 player.drunkness += 1.5f*Time.deltaTime;
                 player.drunknessInertia += 1.5f*Time.deltaTime;
-                //bleedoutTimer -= Time.deltaTime;
                 yield return null;
             }
             // Start to die
-            //personalAudio.GetComponent<AudioSource>().PlayOneShot(personalAudioBreathing[0]);
+            PlayPersonalSoundServerRpc(playerClientId,0,(int)AudioGroup.BREATHING);
+            player.DropBlood(default,true,true);
             player.MakeCriticallyInjured(true);
             while(!player.isPlayerDead && (Time.realtimeSinceStartup - timeSinceEntered < bleedoutTimer)){
                 player.movementSpeed -= 0.1f*Time.deltaTime;
                 player.drunkness += 2f*Time.deltaTime;
                 player.drunknessInertia += 2f*Time.deltaTime;
-
-                //bleedoutTimer -= Time.deltaTime;
                 yield return null;
             }
             // Has player already died before blood loss? 
             // (This Coroutine should already be killed if player dies by ways related to this mod/Pocket Dimension)
-            if ((Time.realtimeSinceStartup - timeSinceEntered > bleedoutTimer) && player.isPlayerDead){
-                //personalAudio.GetComponent<AudioSource>().Stop(true);
+            if (player.isPlayerDead){
+                yield break;
             } else {
                 // Expiration Death 1 - Blood Loss
-                
+                // Ensure that the player affected is the one to call the actual death.
+                // (To avoid race conditions due to latency issues)
+                if(playerClientId == (int)NetworkManager.LocalClientId){
+                    //personalAudios[playerClientId].PlayOneShot(personalAudioDeath[0]);
+                    PlayPersonalSoundServerRpc(playerClientId,0,(int)AudioGroup.DEATH);
+                    PlayerDeathServerRpc(playerClientId,(int)DeathStyle.BLEED);
+                }
             }
         }
-        
-        // 
-        [ServerRpc]
+
+        [ServerRpc(RequireOwnership = false)]
+        private void KillPlayerServerRpc(int playerClientId){
+
+        }   
+        [ClientRpc]
+        private void KillPlayerClientRpc(int playerClientId){
+
+        }
+
+        [ServerRpc(RequireOwnership = false)]
         public void PlayerDeathServerRpc(int playerClientId, int deathStyle, Vector3 optionalExtraInfo = default){
-            LogIfDebugBuild("PDC: Called PlayerDeathServerRpc");
+            PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
+
+            // Check if Player can be in Animation (Avoid duplicate function calls)
+            if(player.inSpecialInteractAnimation){
+                return;
+            }
+            player.UpdateSpecialAnimationValue(true,default,4,default);
             switch(deathStyle){
                 case (int)DeathStyle.SLAM: {
                     DeathStyleSlamClientRpc(playerClientId,optionalExtraInfo);
@@ -195,53 +253,59 @@ namespace SCP106{
             }
         }
 
+        [ServerRpc(RequireOwnership = false)]
+        private void PlayerValueResetServerRpc(int playerClientId){
+            PlayerValueResetClientRpc(playerClientId);
+        }
+
         // Reset to standard values
-        private void PlayerDeathValueReset(int playerClientId){
+        [ClientRpc]
+        private void PlayerValueResetClientRpc(int playerClientId){
             PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
             player.drunkness = 0f;
             player.drunknessInertia = 0f;
+            player.playerBodyAnimator.speed = 1;
         }
 
         // Teleport Death 1.2 - Player slammed into wall
         [ClientRpc]
         public void DeathStyleSlamClientRpc(int playerClientId, Vector3 crushColliderPosition){
             // "Damage5.ogg", CauseOfDeath.Crushing
-            LogIfDebugBuild("PDC: Player died of Crushing");
+            // Everything
+            if(playerClientId != (int)NetworkManager.LocalClientId){
+                return;
+            }
             StartCoroutine(SlamToWall(playerClientId,crushColliderPosition));
         }
 
         // Teleport Death 1.2 - Animation to Kill Player
-        public IEnumerator SlamToWall(int playerClientId, Vector3 crushColliderPosition){
+        private IEnumerator SlamToWall(int playerClientId, Vector3 crushColliderPosition){
+            StopCoroutine(this.localPlayerCoroutine);
             float timeSinceStart = Time.realtimeSinceStartup;
             float timeToDie = 1f;
 
             PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
-            
-            //AudioSource personalAudio = personalAudios[playerClientId].GetComponent<AudioSource>();
             Vector3 turnDirection = crushColliderPosition - player.gameObject.transform.position;
 
+            // Smooth animation to collide with wall
             while (Time.realtimeSinceStartup - timeSinceStart < timeToDie){
                 player.gameObject.transform.rotation = Quaternion.Lerp(player.gameObject.transform.rotation, Quaternion.LookRotation(turnDirection), Time.deltaTime *2f);
                 player.gameObject.transform.position = Vector3.Lerp(player.gameObject.transform.position, crushColliderPosition, Time.deltaTime*2f);
                 yield return null;
             }
-            //personalAudio.PlayOneShot(personalAudioDeath[3]);
 
-            player.KillPlayer(player.velocityLastFrame*5f,true,CauseOfDeath.Crushing,1,default);
+            PlayPersonalSoundServerRpc(playerClientId,3,(int)AudioGroup.DEATH);
+            player.KillPlayer(new Vector3(5,0,5),true,CauseOfDeath.Crushing,1,default);
 
-            PlayerDeathValueReset(playerClientId);
+            PlayerValueResetServerRpc(playerClientId);
         }
 
         // Expiration Death 1 - Player dies from blood loss
         [ClientRpc]
-        private void DeathStyleBleedClientRpc(int playerClientId){
+        public void DeathStyleBleedClientRpc(int playerClientId){
             PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
-            //AudioSource personalAudio = personalAudios[playerClientId].GetComponent<AudioSource>();
-            // "Damage1.ogg", CauseOfDeath.Stabbing
-            LogIfDebugBuild("PDC: Player died of Blood Loss");
-            //personalAudio.PlayOneShot(personalAudioDeath[0]);
             player.KillPlayer(Vector3.zero,true,CauseOfDeath.Stabbing,0,default);
-            PlayerDeathValueReset(playerClientId);
+            PlayerValueResetClientRpc(playerClientId);
         }
     }
 }

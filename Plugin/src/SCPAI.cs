@@ -24,6 +24,9 @@ namespace SCP106 {
         private GameObject pocketd; // Pocket Dimension Spawned
         private PocketDimController pdController; // Pocket Dimension Controller
 
+        public GameObject corrosion; // Prefab
+        private GameObject[] corrosionSpawned; // Instantiated & Spawned (1 for each player + 2 for SCP)
+
         public Transform boneHead; // Head object reference of the model
         public Transform boneNeck; // Neck object reference
         public Transform turnReference; // Invisible object pointing towards player, as reference to smoothly track head & neck
@@ -71,6 +74,7 @@ namespace SCP106 {
 
         // Configuration settings
         private int nonDeadlyInteractions = 15; // Chance to push, etc
+        private int chanceForPocketDimension = 20;
         private bool stunnable = true;
         private bool canGoOutside = false;
         private bool canGoInsideShip = false;
@@ -84,6 +88,7 @@ namespace SCP106 {
             HUNTING,
             KILLING,
             EMERGING, // "Teleport" To a Player
+            SINKING,
         }
         public enum HeadState { // SCP Head State (Animation)
             StartLookingAtPlayer,
@@ -97,6 +102,8 @@ namespace SCP106 {
             Neck,
             Killing,
             PlayerKilled,
+            Sinking,
+            Emerging,
         }
         public enum KillState { // SCP Kill States (Kill Animations / Kill Events, e.g. "Death by PukingAtPlayer")
             StaringAtPlayer, // General Collision Kill
@@ -125,6 +132,7 @@ namespace SCP106 {
         [ServerRpc]
         public void InitSCPValuesServerRpc() {
             int deadly = Math.Clamp(Plugin.BoundConfig.NonDeadlyInteractions.Value,0,100);
+            int pdChance = Math.Clamp(Plugin.BoundConfig.ChanceForPocketDimension.Value,0,100);
             bool stun = Plugin.BoundConfig.Stunnable.Value;
             bool outside = Plugin.BoundConfig.CanGoOutside.Value;
             bool ship = Plugin.BoundConfig.CanGoInsideShip.Value;
@@ -137,13 +145,22 @@ namespace SCP106 {
             this.pdController = pocketd.GetComponentInChildren<PocketDimController>();
             this.pdController.RegisterSCPServerRpc(pocketd.transform.position);
 
-            InitSCPValuesClientRpc(deadly,stun,outside,ship);
+            /*this.corrosionSpawned = new GameObject[StartOfRound.Instance.allPlayerScripts.Length + 2];
+            for(int i = 0; i < corrosionSpawned.Length; i++){
+                GameObject corr = Instantiate(corrosion, new Vector3(0,0,0),Quaternion.identity,base.transform);
+                this.corrosionSpawned[i] = corr;
+                corr.GetComponent<NetworkObject>().Spawn();
+                corr.SetActive(false);
+            }*/
+
+            InitSCPValuesClientRpc(deadly,pdChance,stun,outside,ship);
         }
 
         [ClientRpc]
-        public void InitSCPValuesClientRpc(int deadly, bool stun, bool outside, bool ship) {
+        public void InitSCPValuesClientRpc(int deadly, int pdChance, bool stun, bool outside, bool ship) {
             // Setup the default values, e.g. config values
             nonDeadlyInteractions = deadly;
+            chanceForPocketDimension = pdChance;
             stunnable = stun;
             enemyType.canBeStunned = stun;
             canGoOutside = outside;
@@ -169,25 +186,6 @@ namespace SCP106 {
             // Start spawn animation
             creatureAnimator.SetTrigger("startStill");
             StartCoroutine(DelayAndStateClient(3f, (int)State.SEARCHING));
-        }
-
-        // DEBUG: Prints all objects on the level on spawn, with their tags.
-        private void DebugPrintAllObjects(){
-            LogIfDebugBuild("Printing all items");
-            IEnumerable<GameObject> objects = UnityEngine.Object.FindObjectsOfType<GameObject>();
-            foreach(GameObject obj in objects){
-                LogIfDebugBuild($"Layer: {obj.layer}, Tag: {obj.tag}, Name: {obj.name}");
-            }
-        }
-
-        // If called, SCP's AI navigation will avoid Hazards (quicksand, water)
-        // Not working yet, so left unused.
-        private void AvoidHazards(){
-            IEnumerable<GameObject> hazards = UnityEngine.Object.FindObjectsOfType<GameObject>().Where(obj => obj.GetComponent<QuicksandTrigger>());
-            foreach(GameObject obj in hazards){
-                LogIfDebugBuild($"Layer: {obj.layer}, Tag: {obj.tag}, Name: {obj.name}");
-                
-            }
         }
 
         // Waits for specified time and then changes to specified state.
@@ -595,6 +593,7 @@ namespace SCP106 {
             if(checkPlayer == null) return false;
             return true;
         }
+
         /*
             [SEARCHING -> EMERGE]
             Sets the TargetPlayer to the player who is furthest away from the other players.
@@ -637,6 +636,7 @@ namespace SCP106 {
         */
         [ServerRpc(RequireOwnership = false)]
         public void StartEmergeSequenceServerRpc(int playerClientId) {
+            StartSinkingClientRpc();
             StartEmergeSequenceClientRpc(playerClientId);
         }
 
@@ -645,10 +645,14 @@ namespace SCP106 {
             StartCoroutine(EmergeNearPlayer(playerClientId));
         }
 
-        public IEnumerator EmergeNearPlayer(int playerClientId) {
-            // Do and wait for Sink Animation to finish
+        [ClientRpc]
+        private void StartSinkingClientRpc(){
             creatureAnimator.SetTrigger("startSink");
             creatureSFX.PlayOneShot(sinkSFX);
+        }
+
+        private IEnumerator EmergeNearPlayer(int playerClientId) {
+            // Do and wait for Sink Animation to finish
             yield return new WaitForSeconds(3f);
 
             // Get Player Position
@@ -669,6 +673,9 @@ namespace SCP106 {
                 yield break;
             }
             // Create Corrosion at playerPosition (TODO), and Emerge from it
+            /*if(IsHost || IsServer){
+                StartCoroutine(GrowCorrosion(1));
+            }*/
             creatureAnimator.speed = 0.7f;
             creatureAnimator.SetTrigger("startEmerge");
             creatureSFX.PlayOneShot(emergeSFX);
@@ -702,26 +709,26 @@ namespace SCP106 {
             }
             //PlayerControllerB collidedPlayer = MeetsStandardPlayerCollisionConditions(other);
             PlayerControllerB collidedPlayer = other.GetComponent<PlayerControllerB>();
-            if (this.inSpecialAnimationWithPlayer != null){
-                if (collidedPlayer.playerClientId == inSpecialAnimationWithPlayer.playerClientId){
-                    return;
-                }
-                this.inSpecialAnimationWithPlayer = collidedPlayer;
-            }
 
-            SendPlayerToPocketDimensionServerRpc((int)collidedPlayer.playerClientId);
-
-            return;
             if (collidedPlayer != null && !collidedPlayer.isPlayerDead)
             {
-                int rollDeadly = rnd.Next(0,100);
-                // Check if SCP should harm/taunt or kill player.
-                if (rollDeadly < nonDeadlyInteractions){
-                    PushPlayerServerRpc((int)collidedPlayer.playerClientId);
+                if (this.inSpecialAnimationWithPlayer != null){
+                    if (collidedPlayer.playerClientId == inSpecialAnimationWithPlayer.playerClientId){
+                        return;
+                    }
+                    this.inSpecialAnimationWithPlayer = collidedPlayer;
                 }
-                else {
-                    // TODO: New kill animation if player is / is not looking @ SCP
-                    GrabAndKillPlayerServerRpc((int)collidedPlayer.playerClientId);
+
+                int rollSendToPD = rnd.Next(0,101);
+                if (rollSendToPD <= chanceForPocketDimension){
+                    SendPlayerToPocketDimensionServerRpc((int)collidedPlayer.playerClientId);
+                } else{
+                    int rollDeadly = rnd.Next(0,101);
+                    if (rollDeadly <= nonDeadlyInteractions){
+                        PushPlayerServerRpc((int)collidedPlayer.playerClientId);
+                    } else {
+                        GrabAndKillPlayerServerRpc((int)collidedPlayer.playerClientId);
+                    }
                 }
                 timeAtHittingPlayer = Time.realtimeSinceStartup;
             }
@@ -787,12 +794,45 @@ namespace SCP106 {
             inSpecialAnimationWithPlayer.disableSyncInAnimation = false;
             inSpecialAnimationWithPlayer.disableLookInput = false;
             inSpecialAnimationWithPlayer.gameplayCamera.transform.position = inSpecialAnimationWithPlayer.cameraContainerTransform.position;
+            inSpecialAnimationWithPlayer = null;
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void SendPlayerToPocketDimensionServerRpc(int playerClientId){
+        private void SendPlayerToPocketDimensionServerRpc(int playerClientId){
             LogIfDebugBuild($"Player {NetworkManager.LocalClientId} is in SendPlayerToPocketDimensionServerRpc!");
-            pdController.PlayerEnterPocketDimensionServerRpc(playerClientId);
+            PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
+            //Ray interactRay = new(player.transform.position + player.transform.up * 2f, Vector3.down);
+            /*if (Physics.Raycast(player.transform.position, player.transform.TransformDirection(Vector3.down), out RaycastHit rayHit, 6f, StartOfRound.Instance.collidersAndRoomMaskAndDefault, QueryTriggerInteraction.Ignore)){
+                this.corrosionSpawned[playerClientId].transform.position = rayHit.point;
+                this.corrosionSpawned[playerClientId].SetActive(true);
+                StartCoroutine(GrowCorrosion(playerClientId+2));
+            }*/
+            StartCoroutine(SinkWaitEmergeNearPlayer());
+            pdController.PlayerEnterPocketDimensionServerRpc(playerClientId, player.transform.position);
+        }
+
+        private IEnumerator SinkWaitEmergeNearPlayer(){
+            SwitchToBehaviourServerRpc((int)State.EMERGING);
+            DoAnimationServerRpc((int)State.SINKING);
+            PlaySFXServerRpc((int)SFX.Sinking);
+            yield return new WaitForSeconds(4f);
+            PlaySFXServerRpc((int)SFX.Chasing,false);
+            yield return new WaitForSeconds(15f);
+            PlayerControllerB playerToEmergeAt = GetClosestPlayer(false,true,true);
+            if (playerToEmergeAt == null){
+                DoAnimationServerRpc((int)State.EMERGING);
+                PlaySFXServerRpc((int)SFX.Emerging);
+                yield break;
+            }
+            StartEmergeSequenceClientRpc((int)playerToEmergeAt.playerClientId);
+        }
+
+        private IEnumerator GrowCorrosion(int corrosionIndex){
+            float timeSinceStarted = Time.realtimeSinceStartup;
+            while(Time.realtimeSinceStartup - timeSinceStarted < 2f){
+                this.corrosionSpawned[corrosionIndex].transform.localScale = Vector3.Lerp(new(0,0,0),new(5,5,0),2f * Time.deltaTime);
+                yield return null;
+            }
         }
 
 /* * [PLAYER RELATED FUNCTIONS END] * */
@@ -1026,6 +1066,15 @@ namespace SCP106 {
                     creatureSFX.volume = 0.7f;
                     creatureSFX.PlayOneShot(playerSFX);
                     break;
+                case (int)SFX.Sinking:
+                    creatureSFX.volume = 0.7f;
+                    creatureSFX.PlayOneShot(sinkSFX);
+                    break;
+                case (int)SFX.Emerging:
+                    creatureSFX.volume = 0.7f;
+                    creatureSFX.PlayOneShot(emergeSFX);
+                    break;
+                default: break;
             }
         }
 
@@ -1075,6 +1124,12 @@ namespace SCP106 {
                     agent.speed = 0f;
                     break;
                 case (int)State.EMERGING:
+                    creatureAnimator.SetTrigger("startEmerge");
+                    creatureAnimator.speed = 0.7f;
+                    break;
+                case (int)State.SINKING:
+                    creatureAnimator.SetTrigger("startSink");
+                    creatureAnimator.speed = 1f;
                     break;
                 default:
                     LogIfDebugBuild("DoAnimation: Went to Inexistent State");

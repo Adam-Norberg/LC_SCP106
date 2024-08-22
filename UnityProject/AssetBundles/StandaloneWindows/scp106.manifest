@@ -1,15 +1,15 @@
 ManifestFileVersion: 0
-CRC: 3228248157
+CRC: 698989703
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: e63f1220072718636d2ded82d7f5ef85
+    Hash: aed6edb6325f4b9c8504380a305a41de
   TypeTreeHash:
     serializedVersion: 2
-    Hash: 2650b66b8ec82081d9000104a2b05225
+    Hash: cb43a345d6e000336f71cbe444daefe6
   IncrementalBuildHash:
     serializedVersion: 2
-    Hash: e63f1220072718636d2ded82d7f5ef85
+    Hash: aed6edb6325f4b9c8504380a305a41de
 HashAppended: 0
 ClassTypes:
 - Class: 1
@@ -29,6 +29,8 @@ ClassTypes:
 - Class: 48
   Script: {instanceID: 0}
 - Class: 54
+  Script: {instanceID: 0}
+- Class: 64
   Script: {instanceID: 0}
 - Class: 65
   Script: {instanceID: 0}
@@ -78,6 +80,8 @@ ClassTypes:
   Script: {instanceID: 0}
 - Class: 167
   Script: {instanceID: 0}
+- Class: 169
+  Script: {instanceID: 0}
 - Class: 195
   Script: {instanceID: 0}
 - Class: 198
@@ -101,4 +105,5 @@ Assets:
 - Assets/ExampleEnemy/pocketdim/pocketdimension.prefab
 - Assets/ExampleEnemy/SCP106.asset
 - Assets/ExampleEnemy/pocketdim/pdPersonalAudio.prefab
+- Assets/ExampleEnemy/pocketdim/corrosionDecal.prefab
 Dependencies: []
