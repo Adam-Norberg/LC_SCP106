@@ -18679,6 +18679,7 @@ GameObject:
   - component: {fileID: 7153143196854037336}
   - component: {fileID: 8505719240556063002}
   - component: {fileID: 6489381805002124958}
+  - component: {fileID: 3716657642979435829}
   m_Layer: 0
   m_Name: pdAudio
   m_TagString: Untagged
@@ -18861,6 +18862,22 @@ AudioLowPassFilter:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &3716657642979435829
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8670124683226042145}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04f75356a7e9c978bddc7d568e58a50b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useReverb: 0
+  overridingLowPass: 0
+  lowPassOverride: 5000
+  debugLog: 0
 --- !u!1 &8693392707855925593
 GameObject:
   m_ObjectHideFlags: 0

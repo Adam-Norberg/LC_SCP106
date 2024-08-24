@@ -45,13 +45,15 @@ namespace SCP106 {
             var PocketDimension = (GameObject)ModAssets.LoadAsset("pocketdimension");
             var personalAudio = (GameObject)ModAssets.LoadAsset("pdPersonalAudio");
             var corrosionDecal = (GameObject)ModAssets.LoadAsset("corrosionDecal");
+            var corrosionDecalProjector = (GameObject)ModAssets.LoadAsset("corrosionDecalProjector");
             
             // Network Prefabs need to be registered. See https://docs-multiplayer.unity3d.com/netcode/current/basics/object-spawning/
             // LethalLib registers prefabs on GameNetworkManager.Start.
             NetworkPrefabs.RegisterNetworkPrefab(SCP106.enemyPrefab);
             NetworkPrefabs.RegisterNetworkPrefab(PocketDimension);
             NetworkPrefabs.RegisterNetworkPrefab(personalAudio);
-            NetworkPrefabs.RegisterNetworkPrefab(corrosionDecal);
+            NetworkPrefabs.RegisterNetworkPrefab(corrosionDecal); //Quad Game Object
+            NetworkPrefabs.RegisterNetworkPrefab(corrosionDecalProjector); // HDRP Decal Projector
 			Enemies.RegisterEnemy(SCP106, BoundConfig.SpawnWeight.Value, Levels.LevelTypes.All, Enemies.SpawnType.Default, SCP106TN, SCP106TK);
             
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");

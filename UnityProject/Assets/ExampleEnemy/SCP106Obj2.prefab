@@ -850,6 +850,151 @@ Transform:
   - {fileID: 6031998244591437082}
   m_Father: {fileID: 3211799120011422880}
   m_LocalEulerAnglesHint: {x: -89.98021, y: 0, z: 0}
+--- !u!1 &3099405671390034443
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6157516829057612586}
+  - component: {fileID: 3435550421750036980}
+  - component: {fileID: 5351535871169099084}
+  m_Layer: 19
+  m_Name: CreatureStep
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6157516829057612586
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3099405671390034443}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.078, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4753110319141955858}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!82 &3435550421750036980
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3099405671390034443}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 0.7
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 10
+  Pan2D: 0
+  rolloffMode: 1
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!114 &5351535871169099084
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3099405671390034443}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04f75356a7e9c978bddc7d568e58a50b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useReverb: 0
+  overridingLowPass: 0
+  lowPassOverride: 0
+  debugLog: 0
 --- !u!1 &3116477720677816102
 GameObject:
   m_ObjectHideFlags: 0
@@ -2005,6 +2150,7 @@ Transform:
   - {fileID: 8149626190664692683}
   - {fileID: 2639188432512917958}
   - {fileID: 9205245291701803696}
+  - {fileID: 6157516829057612586}
   - {fileID: 7149861323178709680}
   - {fileID: 6509215572428331498}
   - {fileID: 177822361213226111}
@@ -2212,11 +2358,15 @@ MonoBehaviour:
   isOutside: 0
   pocketdimension: {fileID: 5499161855436384226, guid: 8186fecaa84b8e44f9e85a3ef769641a,
     type: 3}
-  corrosion: {fileID: 3512467851017815443, guid: 8a0b905c1ffc32b48800ad5056fa2a30,
+  corrosion: {fileID: 8238595377477423107, guid: 95d2c4ae293e1a848b820a1ffcef55d8,
     type: 3}
   boneHead: {fileID: 5805488996458945335}
   boneNeck: {fileID: 7491356355985311289}
   turnReference: {fileID: 5076094835432759878}
+  scanNode: {fileID: 3224369557886930374}
+  mapNode: {fileID: 9018055981547676134}
+  scpRenderer: {fileID: 6049987657798355212}
+  creatureStep: {fileID: 3435550421750036980}
   chaseSource: {fileID: 7540698008086738554}
   footstepSounds:
   - {fileID: 8300000, guid: 702e32299faf7aa43b9581ef1e518cde, type: 3}
@@ -2226,20 +2376,29 @@ MonoBehaviour:
   spottedSounds:
   - {fileID: 8300000, guid: 41852127ab94f1741999efd129401d2f, type: 3}
   - {fileID: 8300000, guid: 91a9eec38e429d24992ed7ca3bda13e4, type: 3}
+  - {fileID: 8300000, guid: c908586dfbd46ab488d8f24647ac598d, type: 3}
+  - {fileID: 8300000, guid: cad6713f2d66e564daad55934ee46fd3, type: 3}
+  - {fileID: 8300000, guid: 47aeccff88ad1a446a216932c37a7047, type: 3}
   neckSounds:
   - {fileID: 8300000, guid: a136cf29e08e7c5438daee70f2b5ec76, type: 3}
   - {fileID: 8300000, guid: 64f2b68d6a475c946adba8af50b3bb96, type: 3}
   killingSounds:
-  - {fileID: 8300000, guid: 77b0c23f838c95f4c85c4ed5b0428a3b, type: 3}
   - {fileID: 8300000, guid: 96cedd2d5e1129449b8dacfbb9867fed, type: 3}
+  - {fileID: 8300000, guid: 5ef844678fcacfa4ba97be2bd36bc395, type: 3}
+  - {fileID: 8300000, guid: 7c333a467bf67574a9303d9f9014200b, type: 3}
+  - {fileID: 8300000, guid: cad6713f2d66e564daad55934ee46fd3, type: 3}
   playerKilledSounds:
   - {fileID: 8300000, guid: a1bc650d4baa40747a3d3c779ab657d6, type: 3}
   - {fileID: 8300000, guid: 10e9f616ed77990439fa8f9881f1021f, type: 3}
+  corrosionSounds:
+  - {fileID: 8300000, guid: 6afd27420f077e74bb07df34f7b5ac89, type: 3}
+  - {fileID: 8300000, guid: 653e060040e47cb489776241badf67d4, type: 3}
+  - {fileID: 8300000, guid: 6abcafeee15048642835910daee919b5, type: 3}
   sinkSFX: {fileID: 8300000, guid: eba35433ecf2d034db71d3baeab31782, type: 3}
   emergeSFX: {fileID: 8300000, guid: 05b96055499019b4aa4703e33e84926b, type: 3}
   creatureVFX: {fileID: 7329597996225039312}
   lookAtPlayer: 0
-  KillingPlayer: 0
+  killingPlayer: 0
 --- !u!1 &5390899412767281851
 GameObject:
   m_ObjectHideFlags: 0
@@ -3309,8 +3468,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.9709767, y: 1.846419, z: 1.1995312}
-  m_Center: {x: 0.028174095, y: 0.9232095, z: -0.17249766}
+  m_Size: {x: 0.8803085, y: 1.846419, z: 1.1570176}
+  m_Center: {x: -0.017159753, y: 0.9232095, z: -0.19375445}
 --- !u!54 &6374841746584905634
 Rigidbody:
   m_ObjectHideFlags: 0

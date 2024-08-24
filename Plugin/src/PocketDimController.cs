@@ -125,7 +125,7 @@ namespace SCP106{
         public void PlayerEnterPocketDimensionClientRpc(int playerClientId, Vector3 playerLocation){
             this.playerIsInPD[playerClientId] = true;
             PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
-            LogIfDebugBuild($"Player movementspeed Original: {player.movementSpeed}");
+            LogIfDebugBuild($"Player {(int)NetworkManager.Singleton.LocalClientId} Entered PlayerEnterPocketDimensionClientRpc");
             player.playerBodyAnimator.speed/=3;
             // Only affected player needs to run the Coroutine
             if(playerClientId == (int)NetworkManager.Singleton.LocalClientId){
@@ -173,7 +173,7 @@ namespace SCP106{
         // Limited time to escape Pocket Dimension, then the player dies.
         // Coroutine to move camera similar to SCP-CB Pocket Dimension
         public IEnumerator PocketDimensionEffect(int playerClientId){
-            float bleedoutTimer = 25f;
+            float bleedoutTimer = 45f;
             float timeSinceEntered = Time.realtimeSinceStartup; // StartOfRound.Instance.timeSinceRoundStarted
             PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
             

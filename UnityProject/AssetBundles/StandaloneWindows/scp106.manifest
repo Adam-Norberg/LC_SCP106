@@ -1,15 +1,15 @@
 ManifestFileVersion: 0
-CRC: 698989703
+CRC: 2183159152
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: aed6edb6325f4b9c8504380a305a41de
+    Hash: 43cf1ea29e33e8338eb77d9a2f4dec89
   TypeTreeHash:
     serializedVersion: 2
-    Hash: cb43a345d6e000336f71cbe444daefe6
+    Hash: 4db7c9bd455d12fdc8ac5e4273c7c484
   IncrementalBuildHash:
     serializedVersion: 2
-    Hash: aed6edb6325f4b9c8504380a305a41de
+    Hash: 43cf1ea29e33e8338eb77d9a2f4dec89
 HashAppended: 0
 ClassTypes:
 - Class: 1
@@ -63,6 +63,8 @@ ClassTypes:
 - Class: 114
   Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
 - Class: 114
+  Script: {fileID: 11500000, guid: f19d9143a39eb3b46bc4563e9889cfbd, type: 3}
+- Class: 114
   Script: {fileID: 11500000, guid: d3cecf05b78b173605122a700874719c, type: 3}
 - Class: 114
   Script: {fileID: -1850115285, guid: e38b45bfd3e86ea43b35084057a8cbbc, type: 3}
@@ -100,6 +102,7 @@ SerializeReferenceClassIdentifiers:
 - AssemblyName: Unity.RenderPipelines.HighDefinition.Runtime
   ClassName: UnityEngine.Rendering.HighDefinition.IntScalableSettingValue
 Assets:
+- Assets/ExampleEnemy/pocketdim/corrosionDecalProjector.prefab
 - Assets/ExampleEnemy/Bestiary/SCP106TN.asset
 - Assets/ExampleEnemy/Bestiary/SCP106TK.asset
 - Assets/ExampleEnemy/pocketdim/pocketdimension.prefab
