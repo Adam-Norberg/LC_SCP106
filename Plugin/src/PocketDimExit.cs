@@ -7,10 +7,13 @@ using UnityEngine;
 namespace SCP106{
     class PocketDimExit : NetworkBehaviour{
         #pragma warning disable 0649
-        public Transform pocketDimCentre; // The center of the Pocket Dimension (pdspawn)
+        [Header("Pocket Dimension")]
+        public Transform pocketDimCentre; // Spawn point for this trigger's location (Main/Corridor/Throne)
         public PocketDimController pdController;
+        [Header("This Exit's Wall")]
         public Transform crushCollider; // For Teleport Death 1 (DeathStyle Slam)
-        private System.Random random = new();
+        [Header("This Trigger's Room Type")]
+        public PocketDimController.RoomType type;
 
         [Conditional("DEBUG")]
         void LogIfDebugBuild(string text) {
@@ -18,7 +21,7 @@ namespace SCP106{
         }
 
         public void Awake(){
-            LogIfDebugBuild($"PocketDimExit Awake!");
+            LogIfDebugBuild($"PocketDimExit {type} Awake!");
         }
 
         public void Start(){
@@ -29,27 +32,9 @@ namespace SCP106{
             if (other.tag == "Player"){
                 PlayerControllerB player = other.GetComponent<PlayerControllerB>();
                 if(player.playerClientId == NetworkManager.LocalClientId){
-                    RollForExit(player);
+                    //RollForExit(player);
+                    pdController.RollForExit((int)player.playerClientId,(int)type);
                 }
-            }
-        }
-
-        //[ServerRpc(RequireOwnership = false)]
-        public void RollForExit(PlayerControllerB player){
-            //PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
-            int escapeChance = random.Next(1,9); // 1 to 8
-            // 3 in 8 chance to escape
-            if (escapeChance<=3){
-                pdController.PlayerExitServerRpc((int)player.playerClientId,(int)PocketDimController.ExitStyle.ESCAPED);
-            }
-            // 3 in 8 chance for another attempt
-            else if (escapeChance<=6){
-                player.SpawnPlayerAnimation();
-                player.TeleportPlayer(pocketDimCentre.position);
-            }
-            // 2 in 8 chance to be killed
-            else {
-                pdController.DeathStyleSlamClientRpc((int)player.playerClientId,crushCollider.position);
             }
         }
 

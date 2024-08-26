@@ -21,3 +21,19 @@
 * inSpecialAnimationWithPlayer.inSpecialInteractAnimation
 * inSpecialAnimationWithPlayer.snapToServerPosition
 * inSpecialAnimationWithPlayer.inAnimationWithEnemy
+
+# SCP-106 Event Tree
+
+## Unity Animator Tree (creatureAnimator state tree)
+- Spawn -> startStill (idle)
+- startStill (idle) -> startWalk (Searching)
+- startWalk (Searching) -> stopWalk (still), startKill (killing), startSink (sinking), startPush (pushing)
+- stopWalk (still) -> startWalk (Searching)
+- startKill (killing) -> startStill (stand)
+- startSink (sinking) -> startEmerge (emerging)
+- startStill (stand) -> startWalk (searching)
+- startPush (pushing) -> startWalk
+- startEmerge -> startWalk
+## Behaviour States Tree
+- SEARCHING = [Spotted, Hunting, Killing, Emerging]
+- 

@@ -1,11 +1,14 @@
 ﻿using System.Reflection;
 using UnityEngine;
 using BepInEx;
+using HarmonyLib;
 using LethalLib.Modules;
 using BepInEx.Logging;
 using System.IO;
 using SCP106.Configuration;
 using System;
+using System.Collections.Generic;
+using DunGen;
 
 namespace SCP106 {
     [BepInPlugin(ModGUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -17,6 +20,7 @@ namespace SCP106 {
         internal static new ManualLogSource Logger;
         internal static PluginConfig BoundConfig { get; private set; } = null;
         public static AssetBundle ModAssets;
+        private readonly Harmony harmony = new Harmony(ModGUID);
 
         private void Awake() {
             Logger = base.Logger;
@@ -44,7 +48,6 @@ namespace SCP106 {
             var SCP106TK = ModAssets.LoadAsset<TerminalKeyword>("SCP106TK");
             var PocketDimension = (GameObject)ModAssets.LoadAsset("pocketdimension");
             var personalAudio = (GameObject)ModAssets.LoadAsset("pdPersonalAudio");
-            var corrosionDecal = (GameObject)ModAssets.LoadAsset("corrosionDecal");
             var corrosionDecalProjector = (GameObject)ModAssets.LoadAsset("corrosionDecalProjector");
             
             // Network Prefabs need to be registered. See https://docs-multiplayer.unity3d.com/netcode/current/basics/object-spawning/
@@ -52,10 +55,9 @@ namespace SCP106 {
             NetworkPrefabs.RegisterNetworkPrefab(SCP106.enemyPrefab);
             NetworkPrefabs.RegisterNetworkPrefab(PocketDimension);
             NetworkPrefabs.RegisterNetworkPrefab(personalAudio);
-            NetworkPrefabs.RegisterNetworkPrefab(corrosionDecal); //Quad Game Object
             NetworkPrefabs.RegisterNetworkPrefab(corrosionDecalProjector); // HDRP Decal Projector
 			Enemies.RegisterEnemy(SCP106, BoundConfig.SpawnWeight.Value, Levels.LevelTypes.All, Enemies.SpawnType.Default, SCP106TN, SCP106TK);
-            
+            harmony.PatchAll();
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
 
@@ -74,6 +76,17 @@ namespace SCP106 {
                     }
                 }
             }
-        } 
+        }
+        [HarmonyPatch(typeof(DunGen.Dungeon))]
+        [HarmonyPatch("PostGenerateDungeon")]
+        internal class RoundManagerPatch{
+            // Extend Dungeon Bounds to allow for Pocket Dimension to spawn
+            // (Otherwise players are instantly killed for being teleported Out-Of-Bounds)
+            //[HarmonyPatch("ExtendDungeon")]
+            //[HarmonyPostfix]
+            static void Prefix(DunGen.Dungeon __instance, ref List<DunGen.Tile> __allTiles){
+                
+            }
+        }
     }
 }

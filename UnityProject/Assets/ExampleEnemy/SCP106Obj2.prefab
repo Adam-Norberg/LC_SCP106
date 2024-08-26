@@ -2380,8 +2380,8 @@ MonoBehaviour:
   - {fileID: 8300000, guid: cad6713f2d66e564daad55934ee46fd3, type: 3}
   - {fileID: 8300000, guid: 47aeccff88ad1a446a216932c37a7047, type: 3}
   neckSounds:
-  - {fileID: 8300000, guid: a136cf29e08e7c5438daee70f2b5ec76, type: 3}
-  - {fileID: 8300000, guid: 64f2b68d6a475c946adba8af50b3bb96, type: 3}
+  - {fileID: 8300000, guid: 87141d426cee8d2408319dafa89cc8c6, type: 3}
+  - {fileID: 8300000, guid: 4b0aa86a2c8518a4ca5751092d642f80, type: 3}
   killingSounds:
   - {fileID: 8300000, guid: 96cedd2d5e1129449b8dacfbb9867fed, type: 3}
   - {fileID: 8300000, guid: 5ef844678fcacfa4ba97be2bd36bc395, type: 3}
@@ -2397,8 +2397,6 @@ MonoBehaviour:
   sinkSFX: {fileID: 8300000, guid: eba35433ecf2d034db71d3baeab31782, type: 3}
   emergeSFX: {fileID: 8300000, guid: 05b96055499019b4aa4703e33e84926b, type: 3}
   creatureVFX: {fileID: 7329597996225039312}
-  lookAtPlayer: 0
-  killingPlayer: 0
 --- !u!1 &5390899412767281851
 GameObject:
   m_ObjectHideFlags: 0
