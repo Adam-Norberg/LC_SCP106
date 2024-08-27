@@ -423,7 +423,7 @@ namespace SCP106 {
             }
 
             // Default Hunting Behaviour
-            SetDestinationToPosition(targetPlayer.transform.position, checkForPath: false); //TODO: Set checkForPath to FALSE if something bugs
+            SetDestinationToPosition(targetPlayer.transform.position, checkForPath: true); //TODO: Set checkForPath to FALSE if something bugs
         }
 
         /*
