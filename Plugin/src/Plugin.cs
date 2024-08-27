@@ -65,7 +65,7 @@ namespace SCP106 {
 
             // Check if the spawn rate parsed correctly. If failed, default to spawn rate 25.
             if (spawnRateByLevelType != null && spawnRateByCustomLevelType != null){
-			    Enemies.RegisterEnemy(SCP106, Enemies.SpawnType.Default, spawnRateByLevelType, spawnRateByCustomLevelType, SCP106TN, SCP106TK);
+			    Enemies.RegisterEnemy(SCP106, spawnRateByLevelType, spawnRateByCustomLevelType, SCP106TN, SCP106TK);
             } else{
                 Logger.LogInfo("Failed to parse Spawn Rate Configuration. Defaulted to Global Spawn Rate of 25 for SCP-106.");
                 Enemies.RegisterEnemy(SCP106,25,Levels.LevelTypes.All,Enemies.SpawnType.Default,SCP106TN,SCP106TK);

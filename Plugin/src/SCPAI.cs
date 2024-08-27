@@ -437,7 +437,7 @@ namespace SCP106 {
                 sneaking = false;
                 creatureStep.volume = 0.9f;
                 PlaySFXServerRpc((int)SFX.Spotted, true);
-                StartCoroutine(SpottedPlayerEffect());
+                //StartCoroutine(SpottedPlayerEffect());
                 PlaySFXServerRpc((int)SFX.Chasing, true);
             }
         }
@@ -800,13 +800,14 @@ namespace SCP106 {
                 }
             }
 
-            yield return new WaitForSeconds(10f);
-
-            // When fully emerged, start hunting player (or searching if they already ran away)
-            agent.enabled = true;
+            yield return new WaitForSeconds(9f);
             SwitchToBehaviourClientRpc((int)State.HUNTING);
             DoAnimationClientRpc((int)State.HUNTING);
             PlaySFXServerRpc((int)SFX.Chasing, true);
+            yield return new WaitForSeconds(1f);
+            agent.enabled = true;
+
+            // When fully emerged, start hunting player (or searching if they already ran away)
             timeAtHuntStart = Time.realtimeSinceStartup;
         }
 
@@ -1132,6 +1133,7 @@ namespace SCP106 {
                 inSpecialAnimationWithPlayer.disableLookInput = false;
                 inSpecialAnimationWithPlayer.disableMoveInput = false;
                 inSpecialAnimationWithPlayer.inAnimationWithEnemy = null;
+                inSpecialAnimationWithPlayer = null;
             }
             agent.enabled = true;
             if(IsServer || IsHost){

@@ -1,10 +1,10 @@
 {
     "name": "SCP106",
-    "version_number": "1.0.0",
+    "version_number": "3.0.0",
     "website_url": "https://github.com/Adam-Norberg/LC_SCP106",
     "description": "SCP-106 has breached containment.",
     "dependencies": [
-        "Evaisa-LethalLib-0.16.0",
+        "Evaisa-LethalLib-0.16.1",
         "BepInEx-BepInExPack-5.4.2100"
     ]
 }

@@ -1,15 +1,15 @@
 ManifestFileVersion: 0
-CRC: 3932028860
+CRC: 1836751625
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: 5b025607b31fe4348f378c18c9baf4cb
+    Hash: 832852a73d17daf7bda940110e8df3fe
   TypeTreeHash:
     serializedVersion: 2
     Hash: 86bf6b45eca219e8488c8ee72de32f56
   IncrementalBuildHash:
     serializedVersion: 2
-    Hash: 5b025607b31fe4348f378c18c9baf4cb
+    Hash: 832852a73d17daf7bda940110e8df3fe
 HashAppended: 0
 ClassTypes:
 - Class: 1
@@ -181,7 +181,7 @@ SerializeReferenceClassIdentifiers:
   ClassName: UnityEngine.Rendering.HighDefinition.TargetMidGrayParameter
 Assets:
 - Assets/ExampleEnemy/pocketdim/corrosionDecalProjector.prefab
-- Assets/ExampleEnemy/pocketdim/pocketDimension.prefab
+- Assets/ExampleEnemy/pocketdim/pocketdimension.prefab
 - Assets/ExampleEnemy/Bestiary/SCP106TN.asset
 - Assets/ExampleEnemy/Bestiary/SCP106TK.asset
 - Assets/ExampleEnemy/SCP106.asset
