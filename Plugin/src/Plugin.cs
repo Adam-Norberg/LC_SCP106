@@ -9,6 +9,7 @@ using SCP106.Configuration;
 using System;
 using System.Collections.Generic;
 using DunGen;
+using GameNetcodeStuff;
 
 namespace SCP106 {
     [BepInPlugin(ModGUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -77,15 +78,21 @@ namespace SCP106 {
                 }
             }
         }
-        [HarmonyPatch(typeof(DunGen.Dungeon))]
-        [HarmonyPatch("PostGenerateDungeon")]
-        internal class RoundManagerPatch{
-            // Extend Dungeon Bounds to allow for Pocket Dimension to spawn
-            // (Otherwise players are instantly killed for being teleported Out-Of-Bounds)
-            //[HarmonyPatch("ExtendDungeon")]
-            //[HarmonyPostfix]
-            static void Prefix(DunGen.Dungeon __instance, ref List<DunGen.Tile> __allTiles){
-                
+        [HarmonyPatch(typeof(OutOfBoundsTrigger))]
+        [HarmonyPatch("OnTriggerEnter")]
+        internal class OutOfBoundsTriggersPatch{
+            // NOTE: Possible Transpiler fix needed, instead of prefix
+            static bool Prefix(Collider other){
+                PlayerControllerB player = other.GetComponent<PlayerControllerB>();
+                PocketDimController controller = FindObjectOfType<PocketDimController>();
+                // Check if Player was the collider, and that Pocket Dimension has spawned
+                if (controller != null && player != null){
+                    // Check if the Player was inside the Pocket Dimension when this trigger was called
+                    if(controller.playerIsInPD[(int)player.playerClientId]){
+                        return false;
+                    }
+                }
+                return true;
             }
         }
     }

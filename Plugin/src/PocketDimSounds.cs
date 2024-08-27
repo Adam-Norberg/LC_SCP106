@@ -12,7 +12,6 @@ namespace SCP106{
         public AudioSource soundSource; // AudioSource
         public AudioClip[] sounds;
         public Transform[] soundPositions; // Empty gameObjects where the sound can be played from
-        private System.Random random;
         private float soundTimeLimit = 15f;
         private int previousSound = 0;
         private int soundLength = 0;
@@ -28,10 +27,9 @@ namespace SCP106{
 
         public void Start(){
             soundLength = sounds.Length;
-            if(!IsHost){
+            if(!IsHost || !IsServer){
                 return;
             }
-            random = new();
             InvokeRepeating("PlaySoundServerRpc",0,soundTimeLimit);
         }
 
@@ -41,9 +39,9 @@ namespace SCP106{
 
         [ServerRpc]
         public void PlaySoundServerRpc() {
-            int clipIndex = random.Next(0,soundLength);
+            int clipIndex = UnityEngine.Random.Range(0,soundLength);
             if (clipIndex == previousSound) clipIndex += 1 % soundLength;
-            int positionIndex = random.Next(0,soundPositions.Length);
+            int positionIndex = UnityEngine.Random.Range(0,soundPositions.Length);
             
             PlaySoundClientRpc(clipIndex,positionIndex);
         }
@@ -51,7 +49,7 @@ namespace SCP106{
         [ClientRpc]
         public void PlaySoundClientRpc(int clipIndex, int positionIndex) {
             this.transform.position = soundPositions[positionIndex].position;
-            //LogIfDebugBuild($"SoundPos: {transform.position}");
+            LogIfDebugBuild($"SoundPos: {transform.position}");
             soundSource.PlayOneShot(sounds[clipIndex]);
         }
     }

@@ -16,8 +16,10 @@ namespace SCP106{
         public AudioClip[] personalAudioDeath;  // [Damage1.ogg, Damage2.ogg, Damage3.ogg, Damage5.ogg, NeckSnap3.ogg, Impact.ogg]
         public AudioClip[] personalAudioEnter; // [Enter.ogg, ]
         public AudioClip[] personalAudioExit; // [Exit.ogg, ]
-        public AudioClip personalAudioLaugh; // "Laugh.ogg", played when player remains in Pocket Dimension
+        public AudioClip[] personalAudioMisc; // [Laugh.ogg, Screech.ogg]
         public GameObject personalAudioPrefab; // Audio Source per-player
+        [Header("Pocket Dimension Main Room")]
+        public Transform mainRoomSpawn;
         [Header("Pocket Dimension Throne Room")]
         public Transform throneRoomSpawn;
         public AudioSource throneRoomAudioSource;
@@ -27,7 +29,7 @@ namespace SCP106{
 
         private SCPAI scpReference;
         private Vector3 pocketDimensionPosition;
-        private bool[] playerIsInPD;
+        public bool[] playerIsInPD;
         private bool[] playerIsInThroneRoom;
         private bool[] playerIsInCorridor;
         private Coroutine localPlayerCoroutine;
@@ -56,6 +58,7 @@ namespace SCP106{
             DEATH,
             ENTER,
             EXIT,
+            MISC,
         }
 
         [Conditional("DEBUG")]
@@ -68,6 +71,17 @@ namespace SCP106{
         }
         
         public void Start(){
+        }
+
+        public override void OnDestroy(){
+            PlayerControllerB localPlayer = GameNetworkManager.Instance.localPlayerController;
+            if(localPlayerCoroutine != null){
+                StopCoroutine(localPlayerCoroutine);
+                localPlayer.gameplayCamera.transform.position = localPlayer.cameraContainerTransform.position;
+            }
+            localPlayer.drunkness = 0f;
+            localPlayer.drunknessInertia = 0f;
+            base.OnDestroy();
         }
 
         // On SCP spawn, let SCP-106 and PocketDimension be known to each other.
@@ -102,6 +116,16 @@ namespace SCP106{
                 networkObject.TrySetParent(StartOfRound.Instance.allPlayerScripts[i].transform,true);
                 this.personalAudios[i] = networkObject.GetComponent<AudioSource>();
             }
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void StopPersonalSoundServerRpc(int playerClientId){
+            StopPersonalSoundClientRpc(playerClientId);
+        }
+
+        [ClientRpc]
+        private void StopPersonalSoundClientRpc(int playerClientId){
+            personalAudios[playerClientId].Stop(true);
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -140,6 +164,10 @@ namespace SCP106{
                     throneRoomAudioSource.PlayOneShot(personalAudioKneel);
                     break;
                 }
+                case ((int)RoomType.THRONE,(int)AudioGroup.MISC): {
+                    personalAudios[playerClientId].PlayOneShot(personalAudioMisc[index]);
+                    break;
+                }
                 default: break;
             }
         }
@@ -156,26 +184,26 @@ namespace SCP106{
         // Player Entering: [Starts Coroutine, set self to True in playerIsInPD]
         // All Others: [Set Player Entering to True in playerIsInPD]
         [ClientRpc]
-        public void PlayerEnterPocketDimensionClientRpc(int playerClientId, Vector3 playerLocation){
+        private void PlayerEnterPocketDimensionClientRpc(int playerClientId, Vector3 playerLocation){
             this.playerIsInPD[playerClientId] = true;
             PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
-            player.playerBodyAnimator.speed/=3;
+            player.playerBodyAnimator.speed/=2;
             // Only affected player needs to run the Coroutine
             if(playerClientId == (int)NetworkManager.Singleton.LocalClientId){
                 this.localPlayerExitLocation = playerLocation;
-                LogIfDebugBuild($"Current Pos: {player.transform.position}, reappear: {playerLocation}");
+                LogIfDebugBuild($"Current Pos: {player.transform.position}, pocket position: {pocketDimensionPosition}");
                 this.localPlayerCoroutine = StartCoroutine(PocketDimensionEffect(playerClientId));
             }
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void PlayerExitServerRpc(int playerClientId, int exitStyle){
+        private void PlayerExitServerRpc(int playerClientId, int exitStyle){
             PlayerExitClientRpc(playerClientId,exitStyle);
         }
 
         // 
         [ClientRpc]
-        public void PlayerExitClientRpc(int playerClientId, int exitStyle){
+        private void PlayerExitClientRpc(int playerClientId, int exitStyle){
             // For all Players
             PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
             this.playerIsInPD[playerClientId] = false;
@@ -192,13 +220,18 @@ namespace SCP106{
             {
                 case (int)ExitStyle.RESET: break;
                 case (int)ExitStyle.ESCAPED: {
+                    // TODO: Chance to reappear where player was before entering, and risk for completely random inside facility.
                     player.drunkness = 0.2f;
                     player.drunknessInertia = 0.2f;
                     player.playerBodyAnimator.speed = 1;
-                    player.movementSpeed = 4.6f;
+                    player.movementSpeed *= 3;
                     player.SpawnPlayerAnimation();
                     PlayPersonalSoundServerRpc(playerClientId,(int)RoomType.MAIN,(int)AudioGroup.EXIT,0);
-                    player.TeleportPlayer(this.localPlayerExitLocation);
+                    int locationChance = UnityEngine.Random.Range(0,3);
+                    // 1/3 chance to appear somewhere far away, 2/3 to appear where you entered.
+                    Vector3 reappearPosition = locationChance == 0 ? scpReference.ReturnFromPDRandomLocation(this.localPlayerExitLocation) : this.localPlayerExitLocation;
+                    scpReference.PlaceCorrosionServerRpc(playerClientId+2,reappearPosition);
+                    player.TeleportPlayer(reappearPosition);
                     break;
                 }
                 default: break;
@@ -207,7 +240,7 @@ namespace SCP106{
 
         // Limited time to escape Pocket Dimension, then the player dies.
         // Coroutine to move camera similar to SCP-CB Pocket Dimension
-        public IEnumerator PocketDimensionEffect(int playerClientId){
+        private IEnumerator PocketDimensionEffect(int playerClientId){
             LogIfDebugBuild("Started PocketDimensionEffect");
             float bleedoutTimer = 45f;
             float timeSinceEntered = Time.realtimeSinceStartup; // StartOfRound.Instance.timeSinceRoundStarted
@@ -218,19 +251,18 @@ namespace SCP106{
             // Make the player drunk and slow
             
             player.drunkness = 20f;
-            player.drunknessInertia = 15f;
+            //player.drunknessInertia = 15f;
             player.movementSpeed/=3;
-            player.playerBodyAnimator.speed/=3;
-            LogIfDebugBuild($"Attempting Teleport to position {pocketDimensionPosition}");
-            player.TeleportPlayer(pocketDimensionPosition);
+            player.playerBodyAnimator.speed/=2;
+            LogIfDebugBuild($"Attempting Teleport to position {mainRoomSpawn.position}");
+            player.TeleportPlayer(mainRoomSpawn.position);
             player.SpawnPlayerAnimation();
             player.DropBlood(default,true,true);
-            
 
             // Stay drunk for a while
             while (!player.isPlayerDead && (Time.realtimeSinceStartup - timeSinceEntered < bleedoutTimer - 4)){
-                player.drunkness += 1.5f*Time.deltaTime;
-                player.drunknessInertia += 1.5f*Time.deltaTime;
+                //player.drunkness += 0.5f*Time.deltaTime;
+                //player.drunknessInertia += 0.5f*Time.deltaTime;
                 yield return null;
             }
             // Start to die
@@ -239,13 +271,15 @@ namespace SCP106{
             player.MakeCriticallyInjured(true);
             while(!player.isPlayerDead && (Time.realtimeSinceStartup - timeSinceEntered < bleedoutTimer)){
                 player.movementSpeed -= 0.1f*Time.deltaTime;
-                player.drunkness += 2f*Time.deltaTime;
-                player.drunknessInertia += 2f*Time.deltaTime;
+                player.drunknessInertia += 1f*Time.deltaTime;
                 yield return null;
             }
             // Has player already died before blood loss? 
             // (This Coroutine should already be killed if player dies by ways related to this mod/Pocket Dimension)
             if (player.isPlayerDead){
+                player.movementSpeed = 4.6f;
+                player.drunkness = 0f;
+                player.drunknessInertia = 0f;
                 yield break;
             } else {
                 // Expiration Death 1 - Blood Loss
@@ -270,7 +304,7 @@ namespace SCP106{
             player.UpdateSpecialAnimationValue(true,default,4,default);
             switch(deathStyle){
                 case (int)DeathStyle.SLAM: {
-                    DeathStyleSlamClientRpc(playerClientId,optionalExtraInfo);
+                    //DeathStyleSlamClientRpc(playerClientId,optionalExtraInfo);
                     break;
                 }
                 case (int)DeathStyle.BLEED: {
@@ -300,15 +334,31 @@ namespace SCP106{
         }
 
         // Called when a player enters a trigger. Rolls for chance to escape, retry, or die.
-        public void RollForExit(int playerClientId, int roomType){
-            LogIfDebugBuild("RollForExit!");
+        public void RollForExit(int playerClientId, int roomType, Vector3 optionalVector = default){
+            LogIfDebugBuild($"RollForExit! {playerClientId} {roomType} {optionalVector}");
+            int rollChance = UnityEngine.Random.Range(0,10);
             switch(roomType){
-                case (int)RoomType.MAIN: 
-                    StartOfRound.Instance.allPlayerScripts[playerClientId].drunkness = 1f;
-                    StartOfRound.Instance.allPlayerScripts[playerClientId].drunknessInertia = 1f;
-                    StartOfRound.Instance.allPlayerScripts[playerClientId].TeleportPlayer(corridorSpawn.position); 
+                case (int)RoomType.MAIN:
+                    if(rollChance <= 0){ //0 10% chance for Death
+                        DeathStyleSlam(playerClientId,optionalVector);
+                    } else if(rollChance <= 1){ // 10 % chance for Immediate Escape
+                        PlayerExitServerRpc(playerClientId,(int)ExitStyle.ESCAPED);
+                    } else if (rollChance <= 3){ // 20% chance for Retry
+                        StartOfRound.Instance.allPlayerScripts[playerClientId].TeleportPlayer(mainRoomSpawn.position);
+                        personalAudios[playerClientId].PlayOneShot(personalAudioMisc[0]); // Only for local player
+                    } else { // 60% chance for Corridor
+                        StartOfRound.Instance.allPlayerScripts[playerClientId].TeleportPlayer(corridorSpawn.position);
+                    }
                     break;
-                case (int)RoomType.CORRIDOR: StartOfRound.Instance.allPlayerScripts[playerClientId].TeleportPlayer(throneRoomSpawn.position); break;
+                case (int)RoomType.CORRIDOR:
+                    if(rollChance <= 1){ // 20% chance for Retry
+                        StartOfRound.Instance.allPlayerScripts[playerClientId].TeleportPlayer(corridorSpawn.position);
+                    } else if (rollChance <= 3) { // 20% chance for Escape
+                        PlayerExitServerRpc(playerClientId,(int)ExitStyle.ESCAPED);
+                    } else { // 60% chance for Throne
+                        StartOfRound.Instance.allPlayerScripts[playerClientId].TeleportPlayer(throneRoomSpawn.position);    
+                    }
+                    break;
                 case (int)RoomType.THRONE:
                     if (localPlayerCoroutine != null){
                         StopCoroutine(localPlayerCoroutine);
@@ -323,33 +373,40 @@ namespace SCP106{
         // Sequence for when a player enters the Throne Room.
         private IEnumerator ThroneRoomEffect(int playerClientId){
             PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerClientId];
-            player.drunkness = 1f;
-            player.drunknessInertia = 1f;
+            player.drunkness = 0f;
+            player.drunknessInertia = 0f;
             float timeToKneel = 10f; // 10 seconds to kneel before death
             yield return new WaitForSeconds(3f);
             float startTime = Time.realtimeSinceStartup;
             PlayPersonalSoundServerRpc(playerClientId,(int)RoomType.THRONE,(int)AudioGroup.ENTER,0);
             
             LogIfDebugBuild($"ThroneRoomEffect Waiting for player to Crouch!");
+            bool warningMusic = false;
             // Wait for player to crouch.
             while(!player.isCrouching && Time.realtimeSinceStartup - startTime < timeToKneel){
+                // Play warning music when there's 4 seconds left
+                if (!warningMusic && Time.realtimeSinceStartup - startTime > timeToKneel - 4){
+                    warningMusic = true;
+                    PlayPersonalSoundServerRpc(playerClientId,(int)RoomType.MAIN,(int)AudioGroup.DEATH,0);
+                }
                 yield return new WaitForSeconds(0.1f); // Don't run every frame
             }
             // Let Player Live
             if(player.isCrouching){
+                StopPersonalSoundServerRpc(playerClientId);
                 LogIfDebugBuild($"ThroneRoomEffect Player Crouched in time!");
                 player.gameplayCamera.transform.position = player.cameraContainerTransform.position; // Restore camera position
                 PlayerExitServerRpc(playerClientId,(int)ExitStyle.ESCAPED);
             } else { // Let Player Die
                 LogIfDebugBuild($"ThroneRoomEffect Player will be killed!");
                 Coroutine cameraShake = StartCoroutine(ShakePlayerCamera(player));
-                PlayPersonalSoundServerRpc(playerClientId,(int)RoomType.THRONE,(int)AudioGroup.BREATHING,0);
-                yield return new WaitForSeconds(3f);
-                PlayPersonalSoundServerRpc(playerClientId,(int)RoomType.THRONE,(int)AudioGroup.DEATH,0);
-                yield return new WaitForSeconds(0.2f);
+                yield return new WaitForSeconds(4);
+                PlayPersonalSoundServerRpc(playerClientId,(int)RoomType.MAIN,(int)AudioGroup.DEATH,4);
                 if(cameraShake != null){
                     StopCoroutine(cameraShake);
                 }
+                player.gameplayCamera.transform.position = player.cameraContainerTransform.position;
+                player.KillPlayer(new Vector3(0,0,0),true,CauseOfDeath.Crushing,1);
             }
         }
 
@@ -357,9 +414,9 @@ namespace SCP106{
         private IEnumerator ShakePlayerCamera(PlayerControllerB player){
             float intensityOverTime = 0f;
             while(!player.isPlayerDead){
-                player.gameplayCamera.transform.position = UnityEngine.Random.insideUnitSphere * intensityOverTime;
+                player.gameplayCamera.transform.position = player.cameraContainerTransform.position + UnityEngine.Random.insideUnitSphere * intensityOverTime;
                 if(intensityOverTime<0.15f){
-                    intensityOverTime += Time.deltaTime*0.02f;
+                    intensityOverTime += Time.deltaTime*0.04f;
                 }
                 yield return null;
             }
@@ -367,19 +424,15 @@ namespace SCP106{
         }
 
         // Teleport Death 1.2 - Player slammed into wall
-        [ClientRpc]
-        public void DeathStyleSlamClientRpc(int playerClientId, Vector3 crushColliderPosition){
-            // "Damage5.ogg", CauseOfDeath.Crushing
-            // Everything
-            if(playerClientId != (int)NetworkManager.LocalClientId){
-                return;
-            }
+        public void DeathStyleSlam(int playerClientId, Vector3 crushColliderPosition){
             StartCoroutine(SlamToWall(playerClientId,crushColliderPosition));
         }
 
         // Teleport Death 1.2 - Animation to Kill Player
         private IEnumerator SlamToWall(int playerClientId, Vector3 crushColliderPosition){
-            StopCoroutine(this.localPlayerCoroutine);
+            if(playerClientId == (int)NetworkManager.Singleton.LocalClientId){
+                StopCoroutine(this.localPlayerCoroutine);
+            }
             float timeSinceStart = Time.realtimeSinceStartup;
             float timeToDie = 1f;
 
@@ -387,17 +440,20 @@ namespace SCP106{
             Vector3 turnDirection = crushColliderPosition - player.gameObject.transform.position;
 
             // Play Death Sound
-            int clipIndex = UnityEngine.Random.Range(2,5);
-            PlayPersonalSoundServerRpc(playerClientId,(int)RoomType.MAIN,(int)AudioGroup.DEATH,clipIndex);
+            //int clipIndex = UnityEngine.Random.Range(2,5);
+            //PlayPersonalSoundServerRpc(playerClientId,(int)RoomType.MAIN,(int)AudioGroup.DEATH,clipIndex);
+            PlayPersonalSoundServerRpc(playerClientId,(int)RoomType.MAIN,(int)AudioGroup.DEATH,3);
+            //player.disableSyncInAnimation = true;
             // Smooth animation to collide with wall
             while (Time.realtimeSinceStartup - timeSinceStart < timeToDie){
                 player.gameObject.transform.rotation = Quaternion.Lerp(player.gameObject.transform.rotation, Quaternion.LookRotation(turnDirection), Time.deltaTime *2f);
                 player.gameObject.transform.position = Vector3.Lerp(player.gameObject.transform.position, crushColliderPosition, Time.deltaTime*2f);
                 yield return null;
             }
-
+            PlayPersonalSoundServerRpc(playerClientId,(int)RoomType.MAIN,(int)AudioGroup.DEATH,5);
+            yield return new WaitForSeconds(0.2f);
             player.KillPlayer(new Vector3(5,0,5),true,CauseOfDeath.Crushing,1,default);
-
+            //player.disableSyncInAnimation = false;
             PlayerValueResetServerRpc(playerClientId);
         }
 

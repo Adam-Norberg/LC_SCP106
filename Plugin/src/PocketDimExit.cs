@@ -31,9 +31,13 @@ namespace SCP106{
         private void OnTriggerEnter(Collider other){
             if (other.tag == "Player"){
                 PlayerControllerB player = other.GetComponent<PlayerControllerB>();
-                if(player.playerClientId == NetworkManager.LocalClientId){
+                if(player.playerClientId == NetworkManager.Singleton.LocalClientId){
                     //RollForExit(player);
-                    pdController.RollForExit((int)player.playerClientId,(int)type);
+                    if(this.type == PocketDimController.RoomType.MAIN){
+                        pdController.RollForExit((int)player.playerClientId,(int)type,crushCollider.position);
+                    } else {
+                        pdController.RollForExit((int)player.playerClientId,(int)type);
+                    }
                 }
             }
         }

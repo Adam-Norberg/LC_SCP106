@@ -2356,7 +2356,7 @@ MonoBehaviour:
   stunnedByPlayer: {fileID: 0}
   debugEnemyAI: 0
   isOutside: 0
-  pocketdimension: {fileID: 5499161855436384226, guid: 8186fecaa84b8e44f9e85a3ef769641a,
+  pocketdimension: {fileID: 672096763902193562, guid: 8c818509901c3e04ebae980d78d802ae,
     type: 3}
   corrosion: {fileID: 8238595377477423107, guid: 95d2c4ae293e1a848b820a1ffcef55d8,
     type: 3}

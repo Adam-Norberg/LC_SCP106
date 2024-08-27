@@ -40,6 +40,10 @@ namespace SCP106 {
             - Only play audio for those relevant
         * Carry Head after Kill
             - DeadBodyInfo body, body.attachedTo / body.attackedLimb = SCP Hands
+        * Kneel image
+            - playercontrollerb.playerScreen ?
+        * PD Footstep sound
+            - StartOfRound.Instance.footstepSurfaces (surfaceTag)
         */
         // We set these in our Asset Bundle, so we can disable warning CS0649:
         // Field 'field' is never assigned to, and will always have its default value 'value'
@@ -153,6 +157,12 @@ namespace SCP106 {
             }
         }
 
+        public override void OnDestroy(){
+            PlayerControllerB localPlayer = GameNetworkManager.Instance.localPlayerController;
+            localPlayer.gameplayCamera.transform.position = localPlayer.cameraContainerTransform.position;
+            base.OnDestroy();
+        }
+
         [ServerRpc]
         public void InitSCPValuesServerRpc() {
             int deadly = Math.Clamp(Plugin.BoundConfig.NonDeadlyInteractions.Value,0,100);
@@ -161,42 +171,40 @@ namespace SCP106 {
             bool outside = Plugin.BoundConfig.CanGoOutside.Value;
             bool ship = Plugin.BoundConfig.CanGoInsideShip.Value;
 
-            Component[] planetComps =  RoundManager.Instance.currentLevel.planetPrefab.GetComponents<Component>();
-            foreach(Component c in planetComps){
-                LogIfDebugBuild($"planet component {c}");
-            }
-
+            Transform bottomMostNode = RoundManager.Instance.GetClosestNode(this.transform.position - new Vector3(0,400,0),false);
             // Pocket dimension
-            Vector3 spawnPos = base.transform.position;
-            this.pocketd = Instantiate(pocketdimension,new Vector3(0,100,0),Quaternion.identity,base.transform);
+            this.pocketd = Instantiate(pocketdimension,bottomMostNode.position - new Vector3(0,100,0),Quaternion.identity,base.transform);
             pocketd.GetComponent<NetworkObject>().Spawn(); // Spawns Pocket dimension for all players.
             this.pdController = pocketd.GetComponentInChildren<PocketDimController>();
             ulong networkObjectId = this.GetComponent<NetworkObject>().NetworkObjectId;
-            this.pdController.RegisterSCPServerRpc(pocketd.transform.position,networkObjectId); // TODO: Maybe change pocketd position to pdSpawn
+            this.pdController.RegisterSCPServerRpc(pocketd.transform.position,networkObjectId);
 
             // Corrosion Decal. 1 for each player, and 2 for SCP. (Index: 0,1 for SCP; 2 + playerClientID for Players)
             // Placed on ground where player enters Pocket Dimension.
             // Placed on ground where SCP sinks, and the second where SCP emerges.
-            this.corrosionSpawned = new GameObject[StartOfRound.Instance.allPlayerScripts.Length + 2];
-            for(int i = 0; i < corrosionSpawned.Length; i++){
+            ulong[] corrosionObjects = new ulong[StartOfRound.Instance.allPlayerScripts.Length + 2];
+            for(int i = 0; i < corrosionObjects.Length; i++){
                 GameObject corr = Instantiate(corrosion, new Vector3(0,0,0),Quaternion.Euler(90,0,0),base.transform);
-                this.corrosionSpawned[i] = corr;
-                corr.GetComponent<NetworkObject>().Spawn();
-                corr.SetActive(false);
+                NetworkObject corrosionNetworkObject = corr.GetComponent<NetworkObject>();
+                corrosionNetworkObject.Spawn();
+                corrosionNetworkObject.DestroyWithScene = true;
+                corrosionObjects[i] = corrosionNetworkObject.NetworkObjectId;
             }
 
-            InitSCPValuesClientRpc(deadly,pdChance,stun,outside,ship);
+            InitSCPValuesClientRpc(deadly,pdChance,stun,outside,ship,corrosionObjects);
         }
 
         [ClientRpc]
-        public void InitSCPValuesClientRpc(int deadly, int pdChance, bool stun, bool outside, bool ship) {
+        public void InitSCPValuesClientRpc(int deadly, int pdChance, bool stun, bool outside, bool ship, ulong[] corrosionObjects) {
             // Setup the default values, e.g. config values
             nonDeadlyInteractions = deadly;
             chanceForPocketDimension = pdChance;
             stunnable = stun;
             enemyType.canBeStunned = stun;
-            canGoOutside = outside;
-            canGoInsideShip = ship;
+            //canGoOutside = outside;
+            //canGoInsideShip = ship;
+            canGoOutside = false;
+            canGoInsideShip = false;
 
             timeAtHitByPlayer = Time.realtimeSinceStartup;
             timeAtLastExit = Time.realtimeSinceStartup;
@@ -212,10 +220,15 @@ namespace SCP106 {
             }
             agent.areaMask &= ~(1 << NavMesh.GetAreaFromName("Not Walkable"));
             agent.areaMask &= ~(1 << NavMesh.GetAreaFromName("SmallSpace"));
+
+            // Corrosion Decals
+            this.corrosionSpawned = new GameObject[corrosionObjects.Length];
+            for(int i = 0; i < corrosionObjects.Length; i++){
+                this.corrosionSpawned[i] = NetworkManager.Singleton.SpawnManager.SpawnedObjects[corrosionObjects[i]].gameObject;
+                this.corrosionSpawned[i].SetActive(false);
+            }
             
             //AvoidHazards();
-            //PlayerControllerB player = GetClosestPlayer(false,true,true);
-            //SendPlayerToPocketDimensionServerRpc((int)player.playerClientId,player.transform.position);
 
             // Start spawn animation
             creatureAnimator.SetTrigger("startStill");
@@ -270,9 +283,9 @@ namespace SCP106 {
             base.DoAIInterval();
             switch(currentBehaviourStateIndex){
                 case (int)State.SEARCHING:
-                    if(canGoOutside){
+                    /*if(canGoOutside){
                         ExitEnterFacility();
-                    }
+                    }*/
                     HuntIfPlayerIsInSight();
                     StopChaseMusicIfNoOneNearbyAndLimitReached();
                     HuntLoneliestPlayer();
@@ -537,7 +550,7 @@ namespace SCP106 {
             SwitchToBehaviourServerRpc((int)State.HUNTING);
             DoAnimationServerRpc((int)State.HUNTING);
             timeAtHuntStart = Time.realtimeSinceStartup;
-            StartCoroutine(SpottedPlayerEffect());
+            //StartCoroutine(SpottedPlayerEffect());
             PlaySFXServerRpc((int)SFX.Chasing, true);
         }
 
@@ -692,6 +705,10 @@ namespace SCP106 {
                 if (player.isInElevator){
                     return;
                 }
+                // For the moment unable to emerge into Pocket Dimension, but is planned to work.
+                if (pdController.playerIsInPD[(int)player.playerClientId]){
+                    return;
+                }
                 // Note: 'isPlayerAlone' only becomes true if 1. no one near them, 2. hears no one in WalkieTalkie, and 3. >1 player in lobby/game
                 if (!player.isPlayerAlone && StartOfRound.Instance.livingPlayers != 1){
                     return;
@@ -721,11 +738,13 @@ namespace SCP106 {
         [ServerRpc(RequireOwnership = false)]
         public void StartEmergeSequenceServerRpc(int playerClientId) {
             // Place Corrosion Decal
+            bool placeCorrosion = false;
+            Vector3 corrosionPosition = Vector3.zero;
             if(Physics.Raycast(transform.position, transform.TransformDirection(Vector3.down), out RaycastHit raycastHitEnter, 0.5f, StartOfRound.Instance.collidersAndRoomMaskAndDefault)){
-                this.corrosionSpawned[0].transform.position = raycastHitEnter.point;
-                this.corrosionSpawned[0].SetActive(true);
+                placeCorrosion = true;
+                corrosionPosition = raycastHitEnter.point;
             }
-            StartSinkingClientRpc();
+            StartSinkingClientRpc(placeCorrosion,corrosionPosition);
             StartEmergeSequenceClientRpc(playerClientId);
         }
 
@@ -735,7 +754,11 @@ namespace SCP106 {
         }
 
         [ClientRpc]
-        private void StartSinkingClientRpc(){
+        private void StartSinkingClientRpc(bool placeCorrosion, Vector3 corrosionPosition){
+            if(placeCorrosion){
+                this.corrosionSpawned[0].transform.position = corrosionPosition;
+                this.corrosionSpawned[0].SetActive(true);
+            }
             creatureAnimator.SetTrigger("startSink");
             creatureSFX.PlayOneShot(sinkSFX);
         }
@@ -773,8 +796,7 @@ namespace SCP106 {
             // Place Corrosion Decal
             if(IsServer || IsHost){
                 if(Physics.Raycast(transform.position, transform.TransformDirection(Vector3.down), out RaycastHit raycastHitEnter, 0.5f, StartOfRound.Instance.collidersAndRoomMaskAndDefault)){
-                    this.corrosionSpawned[1].transform.position = raycastHitEnter.point;
-                    this.corrosionSpawned[1].SetActive(true);
+                    PlaceCorrosionServerRpc(1,raycastHitEnter.point);
                 }
             }
 
@@ -795,7 +817,7 @@ namespace SCP106 {
         [ServerRpc(RequireOwnership = false)]
         private void FastEmergeServerRpc(){
             PlayerControllerB playerToEmergeAt = GetClosestPlayer(false,true,true);
-            if(playerToEmergeAt == null){
+            if(playerToEmergeAt == null || pdController.playerIsInPD[(int)playerToEmergeAt.playerClientId]){
                 ToStateSearching();
                 return;
             }
@@ -820,8 +842,7 @@ namespace SCP106 {
             // Place Corrosion Decal
             if(IsServer || IsHost){
                 if(Physics.Raycast(transform.position, transform.TransformDirection(Vector3.down), out RaycastHit raycastHitEnter, 0.5f, StartOfRound.Instance.collidersAndRoomMaskAndDefault)){
-                this.corrosionSpawned[0].transform.position = raycastHitEnter.point;
-                this.corrosionSpawned[0].SetActive(true);
+                PlaceCorrosionServerRpc(0,raycastHitEnter.point);
             }
             }
 
@@ -840,8 +861,7 @@ namespace SCP106 {
             // Place Corrosion Decal
             if(IsServer || IsHost){
                 if(Physics.Raycast(transform.position, transform.TransformDirection(Vector3.down), out RaycastHit raycastHitExit, 0.5f, StartOfRound.Instance.collidersAndRoomMaskAndDefault)){
-                this.corrosionSpawned[1].transform.position = raycastHitExit.point;
-                this.corrosionSpawned[1].SetActive(true);
+                PlaceCorrosionServerRpc(1,raycastHitExit.point);
             }
             }
 
@@ -968,14 +988,25 @@ namespace SCP106 {
 
         [ServerRpc(RequireOwnership = false)]
         private void SendPlayerToPocketDimensionServerRpc(int playerClientId, Vector3 reappearPosition){
-            LogIfDebugBuild($"Player {NetworkManager.LocalClientId} is in SendPlayerToPocketDimensionServerRpc!");
             // Place Corrosion Decal
             if(Physics.Raycast(reappearPosition, transform.TransformDirection(Vector3.down), out RaycastHit raycastHitExit, 0.5f, StartOfRound.Instance.collidersAndRoomMaskAndDefault)){
-                this.corrosionSpawned[2+playerClientId].transform.position = raycastHitExit.point;
-                this.corrosionSpawned[2+playerClientId].SetActive(true);
+                PlaceCorrosionServerRpc(2+playerClientId,raycastHitExit.point);
             }
             pdController.PlayerEnterPocketDimensionServerRpc(playerClientId, reappearPosition);
         }
+
+        /*
+        Returns a randomized vector inside the facility for a Player to appear at when escaping from the Pocket Dimension.
+        playerEntryPosition is the location where the player was before entering the Pocket Dimension.
+        */
+        public Vector3 ReturnFromPDRandomLocation(Vector3 playerEntryPosition){
+            Transform nodeTransform = ChooseFarthestNodeFromPosition(playerEntryPosition);
+            if (nodeTransform == null){
+                return playerEntryPosition;
+            } else {
+                return nodeTransform.position;
+            }
+        }   
 
         [ClientRpc]
         private void SendPlayerToPocketDimensionClientRpc(){
@@ -1216,6 +1247,17 @@ namespace SCP106 {
 /* * [KILLING ANIMATIONS END] * */
 
 /* * [RPC FUNCTIONS START] * */
+
+        [ServerRpc(RequireOwnership = false)]
+        public void PlaceCorrosionServerRpc(int corrosionIndex, Vector3 corrosionPosition){
+            PlaceCorrosionClientRpc(corrosionIndex,corrosionPosition);
+        }
+
+        [ClientRpc]
+        private void PlaceCorrosionClientRpc(int corrosionIndex, Vector3 corrosionPosition){
+            this.corrosionSpawned[corrosionIndex].transform.position = corrosionPosition;
+            this.corrosionSpawned[corrosionIndex].SetActive(true);
+        }
 
         // Change TargetPlayer
         [ServerRpc(RequireOwnership = false)]
