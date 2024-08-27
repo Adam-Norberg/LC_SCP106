@@ -4,7 +4,7 @@
     "website_url": "https://github.com/Adam-Norberg/LC_SCP106",
     "description": "SCP-106 has breached containment.",
     "dependencies": [
-        "Evaisa-LethalLib-0.15.1",
+        "Evaisa-LethalLib-0.16.0",
         "BepInEx-BepInExPack-5.4.2100"
     ]
 }
