@@ -1,5 +1,12 @@
-## 2.0.1
-- Per-Planet spawn rate configuration added
+## 3.0.0
+- Pocket Dimension added.
+- New ability added for SCP-106.
+- New behaviour(s) added.
+- Adjustments made to existing behaviour.
+- Some sound effects added, some older replaced.
+- ... and more.
+- Patched for V62 release of Lethal Company.
+- (Outside behaviour is flawed and thus disabled until further)
 
 ## 2.0.0
 - Blunt objects have been found useful in aiding crewmates in the event of direct contact with SCP-106.

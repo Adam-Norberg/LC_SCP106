@@ -2,63 +2,66 @@
 Adds a new enemy inspired by *SCP: Containment Breach* to Lethal Company. This AI tries to immitate the behaviour and characteristics as seen by SCP-106 in *SCP: CB* as close as possible.
 
 ## Abilities (spoilers)
+<p>Below are summarised details of SCP-106. More content is planned as my Unity skills develop. If you have suggestions then feel free to let me know!</p>
 
 ### Characteristics
 <details>
   <summary>Spoiler warning</summary>
-    - Unkillable.
-    - Sadistic property, chance for non-instakillable interactions.
-  
+    <p>- Unkillable.<br>
+    - Sadistic property, chance for non-instakillable interactions.<br>
+    - Has the Pocket Dimension.
+    </p>
 </details>
 
 ### Damage related
 <details>
   <summary>Spoiler warning</summary>
-    - Grabs & Kill players he comes in contact with.
-    - Player can be saved if SCP is stunned.
-    - Has a chance to push players, damaging them slightly.
-  
+  <p>- Grabs & Kill players he comes in contact with.<br>
+  - Player can be saved if SCP is stunned.<br>
+  - Has a chance to push players, damaging them slightly.<br>
+  - Has a chance to send players to the Pocket Dimension.
+  </p>
 </details>
 
 ### Behaviour
 <details>
   <summary>Spoiler warning</summary>
-    - Detects noise, and will investigate source of noise.
-    - Emerges from behind the loneliest player if he hasn't seen someone for a certain amount of time.
-  
+  <p>- Detects noise, and will investigate source of noise.<br>
+  - Emerges from behind the loneliest player if he hasn't seen someone for a certain amount of time.<br>
+  - Entry & Exit for emerge leaves behind a pool of corrosion (more planned)<br>
+  - Chance for "Fast Emerge" if currently hunted player runs away.<br>
+  - Sneaks up to hunted player if target hasn't seen him. (Quieter steps, no music - no warning of his approach!)
+  </p>
 </details>
 
-## TODO / Ideas
+### Pocket Dimension
+<details>
+<summary>Spoiler warning</summary>
+<p>
+- Has the Main Room, Corridor, and Throne Room (more planned).<br>
+- Players entering & escaping leave behind a pool of corrosion (more planned).<br>
+- Main Room and Corridor has chances for Death, Escape, and Retry.<br>
+- Escape from Pocket Dimension has a chance of reappearing where they entered, or in a random location inside the facility.
+</p>
+</details>
 
-### Walk through doors
-- SCP-106 should, similar to in Containment Breach, be able to pass through solid objects such as doors without having to open them.
-- Possible configuration option to allow locked doors & blast doors.
+### Statistics
+<details>
+<summary>Spoiler warning</summary>
+<p>
+- Around 6 more or less unique ways of being killed (more planned).<br>
+- Around 4 unique player-related behaviours (more planned).<br>
+- Varied pool of sounds used for different interactions (Killing, Hunting, Spotted, Pocket Dimension related, ...)
+</p>
+</details>
 
-### Allow SCP-106 to leave the factory
-- Add a config option so that SCP also becomes an outside enemy.
-- Requires existing functions to take this possibility into account, such as following a hunted player out the door.
-- Possible limitations such as not being able to enter the ship, or not emerging inside the ship.
-
-### SCP-106 leaves corrosion as he wanders
-- Small spots of corrosion every X steps.
-- Either visual only, or could alert SCP-106.
-
-### Player-oriented kill animations
-- If colliding with a player from behind it should perform a different kill animation than if touched from the front.
-- If collided during emerge sequence, he can "drag" the player down into the corrosion.
-
-### Sadistic characteristics
-- Sticking to lore, SCP-106 enjoys tormenting his victims before killing them.
-- Possible ideas include: 
-    - Chance for pushing player instead of insta-killing upon collision.
-    - Chance for bringing player to his "pocket-dimension".
-    - Chance to teleport / bring player to a location far away from other players.
-
-### Sounds
-- Adding new random sounds (/insanity sounds) that occur randomly throughout an expedition.
-- E.g. SCP-106's laughter, but far away in the distance.
-
+## Known Issues
+<p>
+- Outside navigation is flawed, and is disabled by code until it can be fixed.<br>
+- The mod "OopsAllFlooded", as it floods the interior/facility it also floods the Pocket Dimension.
+</p>
 
 ## Credits
-Hamunii (and all people listed in their credits!) for the Template - https://github.com/Hamunii/LC-ExampleEnemy
-- The Model & inherited Animations for "SCP-106" (https://skfb.ly/o7zoA) by ThatJamGuy is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/). *I, the author of this mod (Dackie), have made some alterations and modifications to existing animations as well as new animation(s) not originally made by the creator (ThatJamGuy) of the model.*
+<p>Hamunii (and all people listed in their credits!) for the Template - https://github.com/Hamunii/LC-ExampleEnemy<br>
+The Model & inherited Animations for "SCP-106" (https://skfb.ly/o7zoA) by ThatJamGuy is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/). *Disclaimer: I, the author of this mod (Dackie), have made some alterations and modifications to existing animations as well as new animation(s) not originally made by the creator.*
+</p>

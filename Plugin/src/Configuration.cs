@@ -10,6 +10,7 @@ namespace SCP106.Configuration {
         public ConfigEntry<string> SpawnWeight;
         public ConfigEntry<bool> Stunnable;
         public ConfigEntry<int> NonDeadlyInteractions;
+        public ConfigEntry<int> ChanceForPocketDimension;
         public ConfigEntry<bool> CanGoOutside;
         public ConfigEntry<bool> CanGoInsideShip;
 
@@ -25,6 +26,10 @@ namespace SCP106.Configuration {
 
             NonDeadlyInteractions = plugin.Config.Bind("SCP-106", "NonDeadlyInteractions", 15,
                 "Chance to perform non-deadly interactions with players. Goes from 0 (%) to 100 (%).");
+
+            ChanceForPocketDimension = plugin.Config.Bind("SCP-106","ChanceForPocketDimension",20,
+                "Chance for SCP-106 to send a player to the Pocket Dimension. Goes from 0 (%) to 100 (%).\n" + 
+                "NOTE: Separate from Non-Deadly Interactions percentage. I.e, Value 100 means Players are always sent to the Pocket Dimension.");
             
             CanGoOutside = plugin.Config.Bind("SCP-106", "CanGoOutside", false,
                 "Toggles if SCP-106 can go outside or not.");

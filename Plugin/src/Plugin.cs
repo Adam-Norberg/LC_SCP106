@@ -1,12 +1,15 @@
 ﻿using System.Reflection;
 using UnityEngine;
 using BepInEx;
+using HarmonyLib;
 using LethalLib.Modules;
 using BepInEx.Logging;
 using System.IO;
 using SCP106.Configuration;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
+using DunGen;
+using GameNetcodeStuff;
 
 namespace SCP106 {
     [BepInPlugin(ModGUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -18,6 +21,7 @@ namespace SCP106 {
         internal static new ManualLogSource Logger;
         internal static PluginConfig BoundConfig { get; private set; } = null;
         public static AssetBundle ModAssets;
+        private readonly Harmony harmony = new Harmony(ModGUID);
 
         private void Awake() {
             Logger = base.Logger;
@@ -43,10 +47,18 @@ namespace SCP106 {
             var SCP106 = ModAssets.LoadAsset<EnemyType>("SCP106");
             var SCP106TN = ModAssets.LoadAsset<TerminalNode>("SCP106TN");
             var SCP106TK = ModAssets.LoadAsset<TerminalKeyword>("SCP106TK");
+            var PocketDimension = (GameObject)ModAssets.LoadAsset("pocketdimension");
+            var personalAudio = (GameObject)ModAssets.LoadAsset("pdPersonalAudio");
+            var corrosionDecalProjector = (GameObject)ModAssets.LoadAsset("corrosionDecalProjector");
             
             // Network Prefabs need to be registered. See https://docs-multiplayer.unity3d.com/netcode/current/basics/object-spawning/
             // LethalLib registers prefabs on GameNetworkManager.Start.
             NetworkPrefabs.RegisterNetworkPrefab(SCP106.enemyPrefab);
+            NetworkPrefabs.RegisterNetworkPrefab(PocketDimension);
+            NetworkPrefabs.RegisterNetworkPrefab(personalAudio);
+            NetworkPrefabs.RegisterNetworkPrefab(corrosionDecalProjector); // HDRP Decal Projector
+			//Enemies.RegisterEnemy(SCP106, BoundConfig.SpawnWeight.Value, Levels.LevelTypes.All, Enemies.SpawnType.Default, SCP106TN, SCP106TK);
+            harmony.PatchAll();
 
             // Spawn Weight by Level
             (Dictionary<Levels.LevelTypes, int> spawnRateByLevelType, Dictionary<string, int> spawnRateByCustomLevelType) = GetSpawnRarities(BoundConfig.SpawnWeight.Value);
@@ -105,6 +117,23 @@ namespace SCP106 {
                     }
                 }
             }
-        } 
+        }
+        [HarmonyPatch(typeof(OutOfBoundsTrigger))]
+        [HarmonyPatch("OnTriggerEnter")]
+        internal class OutOfBoundsTriggersPatch{
+            // NOTE: Possible Transpiler fix needed, instead of prefix
+            static bool Prefix(Collider other){
+                PlayerControllerB player = other.GetComponent<PlayerControllerB>();
+                PocketDimController controller = FindObjectOfType<PocketDimController>();
+                // Check if Player was the collider, and that Pocket Dimension has spawned
+                if (controller != null && player != null){
+                    // Check if the Player was inside the Pocket Dimension when this trigger was called
+                    if(controller.playerIsInPD[(int)player.playerClientId]){
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
     }
 }

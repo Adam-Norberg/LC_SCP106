@@ -1,15 +1,15 @@
 ManifestFileVersion: 0
-CRC: 217043279
+CRC: 3932028860
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: ca0b2f33905e9f7e1726b6ccc65b7dd5
+    Hash: 5b025607b31fe4348f378c18c9baf4cb
   TypeTreeHash:
     serializedVersion: 2
-    Hash: 26822b3fc523d000b72737e291948757
+    Hash: 86bf6b45eca219e8488c8ee72de32f56
   IncrementalBuildHash:
     serializedVersion: 2
-    Hash: ca0b2f33905e9f7e1726b6ccc65b7dd5
+    Hash: 5b025607b31fe4348f378c18c9baf4cb
 HashAppended: 0
 ClassTypes:
 - Class: 1
@@ -30,6 +30,8 @@ ClassTypes:
   Script: {instanceID: 0}
 - Class: 54
   Script: {instanceID: 0}
+- Class: 64
+  Script: {instanceID: 0}
 - Class: 65
   Script: {instanceID: 0}
 - Class: 74
@@ -44,18 +46,52 @@ ClassTypes:
   Script: {instanceID: 0}
 - Class: 95
   Script: {instanceID: 0}
+- Class: 108
+  Script: {instanceID: 0}
+- Class: 114
+  Script: {fileID: 11500000, guid: bb977b126bc1b4f15813dcf9da9bb600, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 4b8bcdf71d7fafa419fca1ed162f5fc9, type: 3}
 - Class: 114
   Script: {fileID: 11500000, guid: 65d3fcb39dd67306e9bb17a603308070, type: 3}
 - Class: 114
+  Script: {fileID: 11500000, guid: 7a68c43fe1f2a47cfa234b5eeaa98012, type: 3}
+- Class: 114
   Script: {fileID: 11500000, guid: 04f75356a7e9c978bddc7d568e58a50b, type: 3}
 - Class: 114
+  Script: {fileID: 11500000, guid: 2d08ce26990eb1a4a9177b860541e702, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: d7fd9488000d3734a9e00ee676215985, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: bcf384b154398e341b6b29969c078198, type: 3}
+- Class: 114
   Script: {fileID: 11500000, guid: 3c36d0a92cbb1f26a39169ef0eae393a, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: f034cba68ab55e046ae1445a42f18c0e, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 953beb541740ddc499d005ee80c9ff29, type: 3}
 - Class: 114
   Script: {fileID: 11500000, guid: 0e80ae96b3eb9177eea5c8f9dadbcda1, type: 3}
 - Class: 114
   Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
 - Class: 114
+  Script: {fileID: 11500000, guid: 8233d90336aea43098adf6dbabd606a2, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 7ddcec8a8eb2d684d833ac8f5d26aebd, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: f19d9143a39eb3b46bc4563e9889cfbd, type: 3}
+- Class: 114
   Script: {fileID: 11500000, guid: d3cecf05b78b173605122a700874719c, type: 3}
+- Class: 114
+  Script: {fileID: -1850115285, guid: e38b45bfd3e86ea43b35084057a8cbbc, type: 3}
+- Class: 114
+  Script: {fileID: -995675138, guid: e38b45bfd3e86ea43b35084057a8cbbc, type: 3}
+- Class: 114
+  Script: {fileID: -448165019, guid: e38b45bfd3e86ea43b35084057a8cbbc, type: 3}
 - Class: 114
   Script: {fileID: 369096387, guid: e38b45bfd3e86ea43b35084057a8cbbc, type: 3}
 - Class: 114
@@ -64,19 +100,90 @@ ClassTypes:
   Script: {instanceID: 0}
 - Class: 137
   Script: {instanceID: 0}
+- Class: 169
+  Script: {instanceID: 0}
 - Class: 195
   Script: {instanceID: 0}
 - Class: 198
   Script: {instanceID: 0}
 - Class: 199
   Script: {instanceID: 0}
+- Class: 238
+  Script: {instanceID: 0}
 SerializeReferenceClassIdentifiers:
 - AssemblyName: Assembly-CSharp
   ClassName: AISearchRoutine
 - AssemblyName: Assembly-CSharp
   ClassName: EnemyBehaviourState
+- AssemblyName: Unity.ProBuilder
+  ClassName: UnityEngine.ProBuilder.AutoUnwrapSettings
+- AssemblyName: Unity.ProBuilder
+  ClassName: UnityEngine.ProBuilder.Face
+- AssemblyName: Unity.ProBuilder
+  ClassName: UnityEngine.ProBuilder.SharedVertex
+- AssemblyName: Unity.ProBuilder
+  ClassName: UnityEngine.ProBuilder.UnwrapParameters
+- AssemblyName: Unity.RenderPipelines.Core.Runtime
+  ClassName: UnityEngine.Rendering.AnimationCurveParameter
+- AssemblyName: Unity.RenderPipelines.Core.Runtime
+  ClassName: UnityEngine.Rendering.BoolParameter
+- AssemblyName: Unity.RenderPipelines.Core.Runtime
+  ClassName: UnityEngine.Rendering.ClampedFloatParameter
+- AssemblyName: Unity.RenderPipelines.Core.Runtime
+  ClassName: UnityEngine.Rendering.ClampedIntParameter
+- AssemblyName: Unity.RenderPipelines.Core.Runtime
+  ClassName: UnityEngine.Rendering.ColorParameter
+- AssemblyName: Unity.RenderPipelines.Core.Runtime
+  ClassName: UnityEngine.Rendering.FloatParameter
+- AssemblyName: Unity.RenderPipelines.Core.Runtime
+  ClassName: UnityEngine.Rendering.FloatRangeParameter
+- AssemblyName: Unity.RenderPipelines.Core.Runtime
+  ClassName: UnityEngine.Rendering.MinFloatParameter
+- AssemblyName: Unity.RenderPipelines.Core.Runtime
+  ClassName: UnityEngine.Rendering.MinIntParameter
+- AssemblyName: Unity.RenderPipelines.Core.Runtime
+  ClassName: UnityEngine.Rendering.NoInterpClampedIntParameter
+- AssemblyName: Unity.RenderPipelines.Core.Runtime
+  ClassName: UnityEngine.Rendering.NoInterpMinFloatParameter
+- AssemblyName: Unity.RenderPipelines.Core.Runtime
+  ClassName: UnityEngine.Rendering.NoInterpVector2Parameter
+- AssemblyName: Unity.RenderPipelines.Core.Runtime
+  ClassName: UnityEngine.Rendering.Texture2DParameter
+- AssemblyName: Unity.RenderPipelines.HighDefinition.Runtime
+  ClassName: UnityEngine.Rendering.HighDefinition.AdaptationModeParameter
+- AssemblyName: Unity.RenderPipelines.HighDefinition.Runtime
+  ClassName: UnityEngine.Rendering.HighDefinition.BoolScalableSettingValue
+- AssemblyName: Unity.RenderPipelines.HighDefinition.Runtime
+  ClassName: UnityEngine.Rendering.HighDefinition.CameraClampModeParameter
+- AssemblyName: Unity.RenderPipelines.HighDefinition.Runtime
+  ClassName: UnityEngine.Rendering.HighDefinition.CascadeEndBorderParameter
+- AssemblyName: Unity.RenderPipelines.HighDefinition.Runtime
+  ClassName: UnityEngine.Rendering.HighDefinition.CascadePartitionSplitParameter
+- AssemblyName: Unity.RenderPipelines.HighDefinition.Runtime
+  ClassName: UnityEngine.Rendering.HighDefinition.ExposureModeParameter
+- AssemblyName: Unity.RenderPipelines.HighDefinition.Runtime
+  ClassName: UnityEngine.Rendering.HighDefinition.FogColorParameter
+- AssemblyName: Unity.RenderPipelines.HighDefinition.Runtime
+  ClassName: UnityEngine.Rendering.HighDefinition.FogControlParameter
+- AssemblyName: Unity.RenderPipelines.HighDefinition.Runtime
+  ClassName: UnityEngine.Rendering.HighDefinition.FogDenoisingModeParameter
+- AssemblyName: Unity.RenderPipelines.HighDefinition.Runtime
+  ClassName: UnityEngine.Rendering.HighDefinition.IndirectLightingController/LightLayerEnumParameter
+- AssemblyName: Unity.RenderPipelines.HighDefinition.Runtime
+  ClassName: UnityEngine.Rendering.HighDefinition.IntScalableSettingValue
+- AssemblyName: Unity.RenderPipelines.HighDefinition.Runtime
+  ClassName: UnityEngine.Rendering.HighDefinition.LuminanceSourceParameter
+- AssemblyName: Unity.RenderPipelines.HighDefinition.Runtime
+  ClassName: UnityEngine.Rendering.HighDefinition.MeteringModeParameter
+- AssemblyName: Unity.RenderPipelines.HighDefinition.Runtime
+  ClassName: UnityEngine.Rendering.HighDefinition.ScalableSettingLevelParameter
+- AssemblyName: Unity.RenderPipelines.HighDefinition.Runtime
+  ClassName: UnityEngine.Rendering.HighDefinition.TargetMidGrayParameter
 Assets:
+- Assets/ExampleEnemy/pocketdim/corrosionDecalProjector.prefab
+- Assets/ExampleEnemy/pocketdim/pocketDimension.prefab
 - Assets/ExampleEnemy/Bestiary/SCP106TN.asset
 - Assets/ExampleEnemy/Bestiary/SCP106TK.asset
 - Assets/ExampleEnemy/SCP106.asset
+- Assets/ExampleEnemy/pocketdim/pdPersonalAudio.prefab
 Dependencies: []
