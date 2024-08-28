@@ -1,3 +1,6 @@
+## 3.0.1
+- Fixed broken behaviour from previous version.
+
 ## 3.0.0
 - Pocket Dimension added.
 - New ability added for SCP-106.
