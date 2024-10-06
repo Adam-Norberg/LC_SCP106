@@ -171,9 +171,16 @@ namespace SCP106 {
             bool outside = Plugin.BoundConfig.CanGoOutside.Value;
             bool ship = Plugin.BoundConfig.CanGoInsideShip.Value;
 
-            Transform bottomMostNode = RoundManager.Instance.GetClosestNode(this.transform.position - new Vector3(0,400,0),false);
+            //Transform bottomMostNode = RoundManager.Instance.GetClosestNode(this.transform.position - new Vector3(0,200,0),false);
+            Transform lowestNode = allAINodes[0].transform;
+            foreach (GameObject item in allAINodes)
+            {
+                if(item.transform.position.y < lowestNode.position.y){
+                    lowestNode = item.transform;
+                }
+            }
             // Pocket dimension
-            this.pocketd = Instantiate(pocketdimension,bottomMostNode.position - new Vector3(0,100,0),Quaternion.identity,base.transform);
+            this.pocketd = Instantiate(pocketdimension,lowestNode.position - new Vector3(0,100,0),Quaternion.identity,base.transform);
             pocketd.GetComponent<NetworkObject>().Spawn(); // Spawns Pocket dimension for all players.
             this.pdController = pocketd.GetComponentInChildren<PocketDimController>();
             ulong networkObjectId = this.GetComponent<NetworkObject>().NetworkObjectId;
@@ -999,10 +1006,11 @@ namespace SCP106 {
                 currentBehaviourStateIndex == (int)State.KILLING){
                 return;
             }
-            if (killingPlayer){
+            // Check if already in a special animation / killing player.
+            if (killingPlayer || inSpecialAnimation){
                 return;
             }
-            if (Time.realtimeSinceStartup - timeAtHittingPlayer < 1f) {
+            if (Time.realtimeSinceStartup - timeAtHittingPlayer < 4f) {
                 return;
             }
             //PlayerControllerB collidedPlayer = MeetsStandardPlayerCollisionConditions(other);
@@ -1146,8 +1154,8 @@ namespace SCP106 {
         // Collision-based killing animation server call
         [ServerRpc(RequireOwnership = false)]
         private void GrabPlayerServerRpc(int playerClientId){
-            // Avoid duplicate collisions
-            if(killingPlayer){
+            // Avoid duplicate collisions / infinite animations
+            if(killingPlayer || inSpecialAnimation){
                 return;
             }
             killingPlayer = true;

@@ -5,7 +5,7 @@ using GameNetcodeStuff;
 namespace SCP106{
 
     // A trigger when a player enters the Pocket Dimension. Keeps track of when they should die from "bleeding".
-    class pocketDimEnter : EnemyAICollisionDetect{
+    class PocketDimEnter : EnemyAICollisionDetect{
 
         private PlayerControllerB[] playersInsidePocketDimension;
 
